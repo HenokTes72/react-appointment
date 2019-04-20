@@ -1,0 +1,36 @@
+{
+  "parser": "babel-eslint",
+  "plugins": ["react", "prettier"],
+  "rules": {
+    "max-len": [1, 120, 2, { "ignoreComments": true }],
+    "prettier/prettier": "error",
+    "react/destructuring-assignment": 0,
+    "react/jsx-closing-tag-location": 0,
+    "react/forbid-prop-types": 0,
+    "react/jsx-first-prop-new-line": [2, "multiline"],
+    "react/jsx-filename-extension": 0,
+    "react/jsx-no-target-blank": 0,
+    "react/jsx-uses-vars": 2,
+    "react/require-default-props": 0,
+    "react/require-extension": 0,
+    "react/self-closing-comp": 0,
+    "react/sort-comp": 0
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "extends": [
+    "airbnb-base",
+    "plugin:react/recommended",
+    "plugin:prettier/recommended",
+    "prettier/react"
+  ]
+}

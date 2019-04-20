@@ -1,0 +1,4 @@
+.ant-input:hover {
+    border-right-width: 0px !important;
+    border-bottom: 1px solid #40a9ff;
+}

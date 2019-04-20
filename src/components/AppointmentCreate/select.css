@@ -1,0 +1,10 @@
+.ant-select-focused .ant-select-selection, .ant-select-selection:focus, .ant-select-selection:active {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.ant-select-selection:hover {
+    border-right-width: 0px !important;
+    border-bottom: 1px solid #40a9ff;
+}
