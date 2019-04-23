@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React from 'react';
 import styled from 'styled-components';
 import DayPicker from 'react-day-picker';
@@ -64,7 +63,6 @@ class Calendar extends React.Component {
     // } else {
     //   appointmentDates.push(day);
     // }
-    console.log('HANDLE DAY CLICK CALLED');
     this.props.daySelected(moment(day).format('YYYY-MM-DD'));
     // this.setState({ appointmentDates });
   }

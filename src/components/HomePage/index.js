@@ -44,9 +44,8 @@ const HomePage = ({ isMobileScreen }) => {
   const {
     isBasicsLoading,
     isBasicsError,
-    institutionData
+    institutionData: { doctores, clinicas, aTime, aMinutes }
   } = useFetchPlacesAndProfessionals({ setProfessionalIds });
-  const { doctores, clinicas, aTime, aMinutes } = institutionData;
 
   const {
     isAppointmentLoading,
@@ -73,6 +72,8 @@ const HomePage = ({ isMobileScreen }) => {
   };
 
   const setCreateModalVisiblity = () => {
+    // eslint-disable-next-line no-console
+    console.log('SET CREATE MODAL VISIBILITY CALLED');
     setCreateModal(!showCreateModal);
   };
 
@@ -100,8 +101,6 @@ const HomePage = ({ isMobileScreen }) => {
                     professionals,
                     date
                   });
-                  // eslint-disable-next-line no-console
-                  console.log('APPOINTMENTS: ', appointments);
                   setOneDayAppointments(appointments);
                 }}
                 initialMonth={selectedMonth}
@@ -176,6 +175,7 @@ const HomePage = ({ isMobileScreen }) => {
               branches={clinicas}
               durations={aMinutes}
               times={aTime}
+              toggleModal={setCreateModalVisiblity}
             />
           )
         )}

@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
 
-import axios from 'axios';
+import { getBasicInfo } from '../mock';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -28,7 +28,7 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useFetchAppointmentBasics = (url, initialData = {}) => {
+const useFetchAppointmentBasics = (initialData = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isAppointmentBasicLoading: false,
     isAppointmentBasicError: false,
@@ -42,7 +42,7 @@ const useFetchAppointmentBasics = (url, initialData = {}) => {
       dispatch({ type: 'FETCH_INIT' });
 
       try {
-        const axiosResult = await axios(url);
+        const axiosResult = await getBasicInfo();
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',

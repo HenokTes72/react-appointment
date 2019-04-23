@@ -1,7 +1,7 @@
 import { useState, useEffect, useReducer } from 'react';
 
-import axios from 'axios';
 import { parse } from 'node-html-parser';
+import { getEmails } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -43,9 +43,8 @@ const useFetchEmails = (initialData = []) => {
 
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
-      const url = `${'https://cors-anywhere.herokuapp.com/'}http://test1.saludvitale.com/citas/buscaruserL?email=${query}`;
       try {
-        const result = await axios(url);
+        const result = await getEmails({ query });
         const root = parse(result.data);
         const emailsList = root
           .querySelectorAll('a')

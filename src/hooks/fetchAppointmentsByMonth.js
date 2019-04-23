@@ -1,7 +1,8 @@
 import { useState, useEffect, useReducer } from 'react';
 
-import axios from 'axios';
 import moment from 'moment';
+
+import { getAppointmentByDate } from '../config';
 
 const getTimeFormatForBigCalendar = (date, time) => {
   const twentyFour = moment(time, 'h:mm:ss A').format('HH:mm:ss');
@@ -82,7 +83,11 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useFetchAppointmentsByMonth = (initialData = {}) => {
+const useFetchAppointmentsByMonth = (
+  initialData = {},
+  institutionId = 187,
+  token = 1555334482919
+) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isFetchByMonthLoading: false,
     isFetchByMonthError: false,
@@ -115,15 +120,19 @@ const useFetchAppointmentsByMonth = (initialData = {}) => {
         };
 
         const monthDates = getMonthDates(selectedMonth);
-        // alert(monthDates);
         const requests = [];
         monthDates.forEach(date => {
           professionalIds.forEach(professionalId => {
-            // const url = `${'https://cors-anywhere.herokuapp.com/'}http://test1.saludvitale.com/getDisponibleIdinst?id=${professionalId}&fecha=${date}&inst=187&_=1555334482919`;
-            const url = `http://localhost:3000/api/v1/appointment/${date}${professionalId}`;
-            requests.push(axios(url));
+            const request = getAppointmentByDate({
+              professionalId,
+              selectedDate: date,
+              token,
+              institutionId
+            });
+            requests.push(request);
           });
         });
+
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
         const professionals = [];

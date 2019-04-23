@@ -11,7 +11,6 @@ const Wrapper = styled.div`
 `;
 
 const Footer = ({ setEditModalVisiblity }) => {
-  console.log('setEditModalVisiblity - footer', setEditModalVisiblity);
   return (
     <Wrapper>
       <StyledButton onClick={setEditModalVisiblity}>EDITAR</StyledButton>

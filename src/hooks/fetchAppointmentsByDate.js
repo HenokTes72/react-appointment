@@ -1,6 +1,6 @@
 import { useState, useEffect, useReducer } from 'react';
 
-import axios from 'axios';
+import { getAppointmentByDate } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -51,13 +51,13 @@ const useFetchAppointmentsByDate = (
       try {
         const requests = [];
         professionalIds.forEach(professionalId => {
-          const url = `http://test1.saludvitale.com/getDisponibleIdinst?
-          id=${professionalId}&fecha=${selectedDate}&inst=${institutionId}&_=${token}`;
-          // eslint-disable-next-line no-console
-          console.log(url);
-          const alternateUrl = `http://localhost:3000/api/v1/appointment/${selectedDate}`;
-          // const results = await axios(alternateUrl);
-          requests.push(axios(alternateUrl));
+          const request = getAppointmentByDate({
+            professionalId,
+            selectedDate,
+            token,
+            institutionId
+          });
+          requests.push(request);
         });
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
@@ -73,11 +73,9 @@ const useFetchAppointmentsByDate = (
             if (!isAdded) {
               professionals.push(profesionales);
             }
-            // console.log(...horarios);
             schedules = schedules.concat([...horarios]);
           }
         });
-        // console.log(JSON.stringify(results));
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',

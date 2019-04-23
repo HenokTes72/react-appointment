@@ -1,7 +1,7 @@
 import { useEffect, useReducer } from 'react';
 
-import axios from 'axios';
 import moment from 'moment';
+import { getAllAppointments } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -29,7 +29,7 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useFetchAppointments = (url, initialData) => {
+const useFetchAppointments = (initialData = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isAppointmentsListLoading: false,
     isAppointmentsListError: false,
@@ -43,7 +43,7 @@ const useFetchAppointments = (url, initialData) => {
       dispatch({ type: 'FETCH_INIT' });
 
       try {
-        const result = await axios(url);
+        const result = await getAllAppointments();
 
         if (!didCancel) {
           const selectedDays = result.data['0'].horarios.map(horario =>

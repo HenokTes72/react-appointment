@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
 
-import axios from 'axios';
+import { getBasicInfo } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -43,13 +43,10 @@ const useFetchPlaceAndProfessional = ({
 
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
-      const url = `http://localhost:3000/api/v1/appointment/basics`;
       try {
-        const result = await axios(url);
+        const result = await getBasicInfo({ remote: false });
         const { doctores } = result.data;
         const professionalIds = doctores.map(doc => doc.user_id);
-        // eslint-disable-next-line no-console
-        // console.log('PROF IDS', JSON.stringify(professionalIds));
         setProfessionalIds(professionalIds);
         if (!didCancel) {
           dispatch({

@@ -8,7 +8,6 @@ import * as Yup from 'yup';
 import moment from 'moment';
 
 import AutoComplete from '../AutoComplete';
-// import StyledTimePicker from '../TimePicker';
 import StyledDatePicker from '../DatePicker';
 import Error from '../Error';
 import CustomSelect from './CustomSelect';
@@ -23,7 +22,7 @@ import { StyledButton } from '../Button';
 
 import useFetchEmails from '../../hooks/fetchEmails';
 import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
-import usePostAppointment from '../../hooks/postAppointment';
+import useAppointmentCreate from '../../hooks/createAppointment';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -35,11 +34,6 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
-// const MyTimePicker = styled(StyledTimePicker)`
-//   width: 100%;
-//   margin-bottom: 30px;
-// `;
 
 const StyledH2 = styled(H2)`
   text-align: center;
@@ -116,7 +110,6 @@ const createAppointmentSchema = Yup.object().shape({
       .max(50, 'Too Long')
       .required('Required'),
     phone: Yup.string().required('Required')
-    // phone: Yup.string().matches(phoneRegExp, 'Phone number is not valid')
   }),
   appointment: Yup.object().shape({
     place: Yup.string().required('Required'),
@@ -132,7 +125,8 @@ const AppointmentCreate = ({
   specialists,
   branches,
   durations,
-  times
+  times,
+  toggleModal
 }) => {
   const { emails, setQuery } = useFetchEmails();
 
@@ -146,7 +140,7 @@ const AppointmentCreate = ({
     setFieldNameAndFunc
   } = useFetchUserByEmail();
 
-  const { setNewAppointmentData } = usePostAppointment();
+  const { setNewAppointmentData } = useAppointmentCreate();
 
   const [doctor, setDoctor] = useState({});
   const [branch, setBranch] = useState({});
@@ -174,7 +168,7 @@ const AppointmentCreate = ({
           },
           emailCheck: false
         }}
-        onSubmit={values => {
+        onSubmit={(values, actions) => {
           const data = {
             entre: values.appointment.duration,
             idUser: doctor.user_id,
@@ -204,9 +198,15 @@ const AppointmentCreate = ({
             hasta: '08:10 AM',
             detalle: values.appointment.subject
           };
-          console.log('DATA TO SUBMIT:', JSON.stringify(data));
-          setNewAppointmentData(data);
-          // setSubmitting(true);
+          // eslint-disable-next-line no-console
+          console.log('SET NEW APPOINTMENT DATA IS CALLED');
+          const setSubmitting = success => {
+            actions.setSubmitting(success);
+            if (success) {
+              toggleModal();
+            }
+          };
+          setNewAppointmentData(data, setSubmitting);
         }}
         validationSchema={createAppointmentSchema}
       >
@@ -461,7 +461,8 @@ AppointmentCreate.propTypes = {
   specialists: PropTypes.array.isRequired,
   branches: PropTypes.array.isRequired,
   durations: PropTypes.array.isRequired,
-  times: PropTypes.array.isRequired
+  times: PropTypes.array.isRequired,
+  toggleModal: PropTypes.func.isRequired
 };
 
 export default withMobile(AppointmentCreate);

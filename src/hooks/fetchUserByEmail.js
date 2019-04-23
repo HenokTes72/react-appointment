@@ -1,6 +1,6 @@
 import { useState, useEffect, useReducer } from 'react';
 
-import axios from 'axios';
+import { getUserByEmail } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -45,9 +45,8 @@ const useFetchUserByEmail = (initialData = []) => {
 
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
-      const url = `${'https://cors-anywhere.herokuapp.com/'}http://test1.saludvitale.com/buscaruser?email=${email}`;
       try {
-        const result = await axios(url);
+        const result = await getUserByEmail({ email });
         const data = result.data.success ? result.data : {};
         if (fieldValueFunc !== null) {
           const { first_name: firstName, last_name: lastName, telefono } =
@@ -56,7 +55,6 @@ const useFetchUserByEmail = (initialData = []) => {
           fieldValueFunc(fieldNames.lastName, lastName);
           fieldValueFunc(fieldNames.phone, telefono);
         }
-        console.log('USER', JSON.stringify(data));
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',

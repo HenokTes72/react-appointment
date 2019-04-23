@@ -1,6 +1,6 @@
 import { useState, useEffect, useReducer } from 'react';
 
-import axios from 'axios';
+import { getAppointmentById } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -28,7 +28,7 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useAppointmentFetchById = (initialData = {}) => {
+const useAppointmentFetchById = (initialData = {}, secret = 1555334482919) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isAppointmentLoading: false,
     isAppointmentError: false,
@@ -42,11 +42,8 @@ const useAppointmentFetchById = (initialData = {}) => {
 
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
-      const url = `${'https://cors-anywhere.herokuapp.com/'}http://test1.saludvitale.com/getUserDocinst?slot_id=${
-        idAndName.id
-      }&_=1555334482919`;
       try {
-        const result = await axios(url);
+        const result = await getAppointmentById({ ...idAndName, secret });
         const { user } = result.data;
         const userData = user[0];
         const data = {

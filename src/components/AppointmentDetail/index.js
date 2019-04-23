@@ -14,9 +14,6 @@ const Wrapper = styled.div`
 `;
 
 const AppointmentDetail = ({ data, setEditModalVisiblity }) => {
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify(data));
-  console.log('setEditModalVisiblity', setEditModalVisiblity);
   return (
     <Wrapper>
       <Profile />
