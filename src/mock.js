@@ -790,6 +790,13 @@ const mockAppointmentUpdate = () => {
   };
 };
 
+const mockAppointmentCancel = () => {
+  return {
+    data: {},
+    success: true
+  };
+};
+
 module.exports = {
   mockAllAppointment,
   mockBasicInfo,
@@ -798,5 +805,6 @@ module.exports = {
   mockAppointmentById,
   mockAppointmentByDate,
   mockAppointmentCreate,
-  mockAppointmentUpdate
+  mockAppointmentUpdate,
+  mockAppointmentCancel
 };

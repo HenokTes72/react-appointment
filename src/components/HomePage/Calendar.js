@@ -54,17 +54,7 @@ class Calendar extends React.Component {
   }
 
   handleDayClick(day) {
-    // const { appointmentDates } = this.state;
-    // if (selected) {
-    //   const selectedIndex = appointmentDates.findIndex(selectedDay =>
-    //     DateUtils.isSameDay(selectedDay, day)
-    //   );
-    //   appointmentDates.splice(selectedIndex, 1);
-    // } else {
-    //   appointmentDates.push(day);
-    // }
     this.props.daySelected(moment(day).format('YYYY-MM-DD'));
-    // this.setState({ appointmentDates });
   }
 
   isSelected(day) {

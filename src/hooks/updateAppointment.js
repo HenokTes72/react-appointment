@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 
 import { doAppointmentUpdate } from '../config';
 
@@ -15,13 +15,18 @@ const dataFetchReducer = (state, action) => {
         ...state,
         isUpdateResponseLoading: false,
         isUpdateResponseError: false,
-        updateData: action.payload
+        updateResponse: action.payload
       };
     case 'FETCH_FAILURE':
       return {
         ...state,
         isUpdateResponseLoading: false,
         isUpdateResponseError: true
+      };
+    case 'UPDATE_DATA':
+      return {
+        ...state,
+        newUpdatedData: action.payload
       };
     default:
       throw new Error();
@@ -32,25 +37,24 @@ const useUpdateAppointment = (initialData = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isUpdateResponseLoading: false,
     isUpdateResponseError: false,
-    updateData: initialData
+    updateResponse: initialData,
+    newUpdatedData: {}
   });
-
-  const [newUpdatedData, setNewUpdatedData] = useState({});
 
   useEffect(() => {
     let didCancel = false;
 
-    const fetchData = async () => {
+    const updateData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        if (newUpdatedData) {
+        if (state.newUpdatedData) {
           const bodyFormData = new FormData();
-          newUpdatedData.forEach(field => {
+          state.newUpdatedData.forEach(field => {
             bodyFormData.set(field.name, field.value);
           });
           const result = await doAppointmentUpdate({
             method: 'put',
-            updateData: bodyFormData,
+            updateResponse: bodyFormData,
             config: { headers: { 'Content-Type': 'multipart/form-data' } }
           });
           if (!didCancel) {
@@ -67,12 +71,16 @@ const useUpdateAppointment = (initialData = {}) => {
       }
     };
 
-    fetchData();
+    updateData();
 
     return () => {
       didCancel = true;
     };
-  }, [newUpdatedData]);
+  }, [state.newUpdatedData]);
+
+  const setNewUpdatedData = data => {
+    dispatch({ type: 'UPDATE_DATA', payload: data });
+  };
 
   return { ...state, setNewUpdatedData };
 };

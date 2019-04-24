@@ -7,7 +7,7 @@ import moment from 'moment';
 import LoadingIndicator from '../LoadingIndicator';
 import { CalendarWrapper, AppointmentWrapper } from './AppointmentWrapper';
 import Calendar from './Calendar';
-import Profesionals from './Profesionals';
+import Professionals from './Professionals';
 import AppointmentHeader from './AppointmentHeader';
 import Header2 from '../H2';
 import DayView from './DayView';
@@ -19,6 +19,8 @@ import AppointmentEdit from '../AppointmentEdit';
 import useFetchAppointmentsByMonth from '../../hooks/fetchAppointmentsByMonth';
 import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfessionals';
 import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
+
+import getDayAppointments from '../../utils/getDayAppointment';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -34,11 +36,11 @@ const HomePage = ({ isMobileScreen }) => {
   const {
     isFetchByMonthLoading,
     isFetchByMonthError,
-    oneMonthAppointments,
+    schedules,
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
-    getDayAppointments
+    filterSchedules
   } = useFetchAppointmentsByMonth();
 
   const {
@@ -54,31 +56,51 @@ const HomePage = ({ isMobileScreen }) => {
     setIdAndName
   } = useFetchAppointmentById();
 
-  const [showEditModal, setEditModal] = useState(false);
-  const [showCreateModal, setCreateModal] = useState(false);
-  const [showEventModal, setEventModal] = useState(false);
-  const { schedules, professionals } = oneMonthAppointments;
+  const updateAppointmentData = data => {
+    const { consulta, place, phone } = data;
+    appointmentData.place = place;
+    appointmentData.phone = phone;
+    appointmentData.title = consulta;
+  };
 
   const [oneDayAppointments, setOneDayAppointments] = useState(
     getDayAppointments({
       schedules,
-      professionals,
+      doctores,
       date: moment(new Date()).format('YYYY-MM-DD')
     })
   );
+
+  const [showEditModal, setEditModal] = useState(false);
+  const [showCreateModal, setCreateModal] = useState(false);
+  const [showEventModal, setEventModal] = useState(false);
 
   const setEditModalVisiblity = () => {
     setEditModal(!showEditModal);
   };
 
   const setCreateModalVisiblity = () => {
-    // eslint-disable-next-line no-console
-    console.log('SET CREATE MODAL VISIBILITY CALLED');
     setCreateModal(!showCreateModal);
   };
 
   const setEventModalVisiblity = () => {
     setEventModal(!showEventModal);
+  };
+
+  const handleDaySelected = date => {
+    const appointments = getDayAppointments({
+      schedules,
+      doctores,
+      date
+    });
+    setOneDayAppointments(appointments);
+  };
+
+  const filterOneDaySchedules = doctorIds => {
+    const filteredAppointments = oneDayAppointments.filter(
+      schedule => doctorIds.indexOf(schedule.doctor_id) !== -1
+    );
+    setOneDayAppointments(filteredAppointments);
   };
 
   return (
@@ -89,20 +111,14 @@ const HomePage = ({ isMobileScreen }) => {
           {isFetchByMonthLoading ? (
             <LoadingIndicator />
           ) : (
-            schedules && (
+            schedules &&
+            doctores && (
               <Calendar
                 appointmentDates={[...schedules].map(
                   schedule => schedule.slot_date
                 )}
                 setSelectedMonth={setSelectedMonth}
-                daySelected={date => {
-                  const appointments = getDayAppointments({
-                    schedules,
-                    professionals,
-                    date
-                  });
-                  setOneDayAppointments(appointments);
-                }}
+                daySelected={handleDaySelected}
                 initialMonth={selectedMonth}
               />
             )
@@ -113,10 +129,10 @@ const HomePage = ({ isMobileScreen }) => {
             <div>Loading ...</div>
           ) : (
             doctores && (
-              <Profesionals
-                professionals={[...doctores].map(
-                  doc => `${doc.first_name} ${doc.last_name}`
-                )}
+              <Professionals
+                professionals={doctores}
+                filterOneMonthAppointments={filterSchedules}
+                filterOneDayAppointments={filterOneDaySchedules}
               />
             )
           )}
@@ -148,7 +164,11 @@ const HomePage = ({ isMobileScreen }) => {
         ) : (
           appointmentData &&
           (showEditModal ? (
-            <AppointmentEdit setEditModalVisiblity={setEditModalVisiblity} />
+            <AppointmentEdit
+              data={appointmentData}
+              setEditModalVisiblity={setEditModalVisiblity}
+              updateDetailView={updateAppointmentData}
+            />
           ) : (
             <AppointmentDetail
               data={appointmentData}

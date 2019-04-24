@@ -2,60 +2,9 @@ import { useState, useEffect, useReducer } from 'react';
 
 import moment from 'moment';
 
+import getMonthDates from '../utils/getMonthDates';
+
 import { getAppointmentByDate } from '../config';
-
-const getTimeFormatForBigCalendar = (date, time) => {
-  const twentyFour = moment(time, 'h:mm:ss A').format('HH:mm:ss');
-  return `${moment(date).format('MMMM')} ${moment(date).date()}, ${moment(
-    date
-  ).year()} ${twentyFour}`;
-};
-
-// more of a convenience method for filtering only one day appointments
-const getDayAppointments = ({ schedules, professionals, date }) => {
-  if (schedules) {
-    const dateMatches = schedules.filter(
-      appointment => appointment.slot_date === date
-    );
-    if (dateMatches === undefined) {
-      return [];
-    }
-    const addedIds = [];
-    const filteredMatches = [];
-    dateMatches.forEach(match => {
-      if (addedIds.indexOf(match.id) === -1) {
-        addedIds.push(match.id);
-        filteredMatches.push(match);
-      }
-    });
-    const getProfessionalName = id => {
-      const professional = [...professionals].find(prof => prof.id === id);
-      return `${professional.first_name} ${professional.last_name}`;
-    };
-    const horarios = filteredMatches.map(appointment => ({
-      allDay: false,
-      start: new Date(
-        getTimeFormatForBigCalendar(
-          moment().format('YYYY-MM-DD'),
-          appointment.inicio
-        )
-      ),
-      id: appointment.id,
-      end: new Date(
-        getTimeFormatForBigCalendar(
-          moment().format('YYYY-MM-DD'),
-          appointment.fin ||
-            `${parseInt(appointment.inicio[0], 10) +
-              2}${appointment.inicio.slice(1, appointment.inicio.length - 1)}`
-        )
-      ),
-      title: getProfessionalName(appointment.doctor_id),
-      bgColor: 'red'
-    }));
-    return horarios;
-  }
-  return [];
-};
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -70,7 +19,8 @@ const dataFetchReducer = (state, action) => {
         ...state,
         isFetchByMonthLoading: false,
         isFetchByMonthError: false,
-        oneMonthAppointments: action.payload
+        schedules: action.payload,
+        schedulesCache: action.payload
       };
     case 'FETCH_FAILURE':
       return {
@@ -78,20 +28,28 @@ const dataFetchReducer = (state, action) => {
         isFetchByMonthLoading: false,
         isFetchByMonthError: true
       };
+    case 'FILTER_SCHEDULES':
+      return {
+        ...state,
+        schedules: state.schedulesCache.filter(
+          schedule => action.payload.indexOf(schedule.doctor_id) !== -1
+        )
+      };
     default:
       throw new Error();
   }
 };
 
 const useFetchAppointmentsByMonth = (
-  initialData = {},
+  initialData = [],
   institutionId = 187,
   token = 1555334482919
 ) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isFetchByMonthLoading: false,
     isFetchByMonthError: false,
-    oneMonthAppointments: initialData
+    schedules: initialData,
+    schedulesCache: initialData
   });
 
   const [selectedMonth, setSelectedMonth] = useState(
@@ -107,18 +65,6 @@ const useFetchAppointmentsByMonth = (
       dispatch({ type: 'FETCH_INIT' });
 
       try {
-        const getMonthDates = dateInMonthStr => {
-          const dateInMonth = moment(dateInMonthStr, 'YYYY-MM-DD');
-          const monthDates = [];
-          const daysAhead = dateInMonth.daysInMonth();
-          let thisDate;
-          for (let i = 1; i <= daysAhead; i += 1) {
-            thisDate = dateInMonth.set('date', i);
-            monthDates.push(moment(thisDate).format('YYYY-MM-DD'));
-          }
-          return monthDates;
-        };
-
         const monthDates = getMonthDates(selectedMonth);
         const requests = [];
         monthDates.forEach(date => {
@@ -135,25 +81,18 @@ const useFetchAppointmentsByMonth = (
 
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
-        const professionals = [];
+
         let schedules = [];
         results.forEach(result => {
-          const { success, profesionales, horarios } = result;
+          const { success, horarios } = result;
           if (success) {
-            const match = professionals.find(
-              prof => prof.id === profesionales.id
-            );
-            const isAdded = match !== undefined;
-            if (!isAdded) {
-              professionals.push(profesionales);
-            }
             schedules = schedules.concat([...horarios]);
           }
         });
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',
-            payload: { professionals, schedules }
+            payload: schedules
           });
         }
       } catch (error) {
@@ -170,12 +109,16 @@ const useFetchAppointmentsByMonth = (
     };
   }, [selectedMonth, professionalIds]);
 
+  const filterSchedules = doctorIds => {
+    dispatch({ type: 'FILTER_SCHEDULES', payload: doctorIds });
+  };
+
   return {
     ...state,
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
-    getDayAppointments
+    filterSchedules
   };
 };
 export default useFetchAppointmentsByMonth;

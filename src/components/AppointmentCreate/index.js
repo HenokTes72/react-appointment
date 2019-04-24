@@ -198,15 +198,18 @@ const AppointmentCreate = ({
             hasta: '08:10 AM',
             detalle: values.appointment.subject
           };
-          // eslint-disable-next-line no-console
-          console.log('SET NEW APPOINTMENT DATA IS CALLED');
           const setSubmitting = success => {
             actions.setSubmitting(success);
             if (success) {
               toggleModal();
             }
           };
+          toggleModal();
           setNewAppointmentData(data, setSubmitting);
+          // eslint-disable-next-line no-alert
+          alert(
+            'Your appointment is recorded, but is waiting for a working API'
+          );
         }}
         validationSchema={createAppointmentSchema}
       >

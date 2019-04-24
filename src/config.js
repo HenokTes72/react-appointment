@@ -8,7 +8,8 @@ import {
   mockAppointmentById,
   mockAppointmentByDate,
   mockAppointmentCreate,
-  mockAppointmentUpdate
+  mockAppointmentUpdate,
+  mockAppointmentCancel
 } from './mock';
 
 const LOCAL_END_POINT = 'http://localhost:3000/api/v1/appointment';
@@ -102,6 +103,16 @@ const urlAppointmentUpdate = ({ remote }) =>
 export const doAppointmentUpdate = mockedWith(
   urlAppointmentUpdate,
   mockAppointmentUpdate
+);
+
+const urlAppointmentCancel = ({ remote }) =>
+  isRemote(remote)
+    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/cancelcitainst`
+    : `${LOCAL_END_POINT}/cancel`;
+
+export const doAppointmentCancel = mockedWith(
+  urlAppointmentCancel,
+  mockAppointmentCancel
 );
 
 export default { IS_REMOTE, USE_MOCK, USE_PROXY };

@@ -15,6 +15,8 @@ import StyledDatePicker from '../DatePicker';
 import Input from '../Input';
 import { StyledButton } from '../Button';
 
+import useUpdateAppointment from '../../hooks/updateAppointment';
+
 const ContentWrapper = styled.div`
   padding-left: 50px;
   padding-right: 50px;
@@ -74,7 +76,10 @@ const appointmentEditSchema = Yup.object().shape({
   subject: Yup.string().required('Required')
 });
 
-const AppointmentEdit = ({ setEditModalVisiblity }) => {
+const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
+  const { consulta, place, phone } = data;
+  const { setNewUpdatedData } = useUpdateAppointment();
+
   return (
     <Wrapper>
       <HeaderWrapper>
@@ -88,13 +93,15 @@ const AppointmentEdit = ({ setEditModalVisiblity }) => {
       <Formik
         initialValues={{
           date: moment(Date.now()),
-          place: '',
-          phone: '',
-          subject: ''
+          place,
+          phone,
+          subject: consulta
         }}
         onSubmit={values => {
+          setNewUpdatedData(values);
           // eslint-disable-next-line no-alert
           alert(JSON.stringify(values));
+          updateDetailView(values);
         }}
         validationSchema={appointmentEditSchema}
       >
@@ -164,7 +171,8 @@ const AppointmentEdit = ({ setEditModalVisiblity }) => {
 };
 
 AppointmentEdit.propTypes = {
-  setEditModalVisiblity: PropTypes.func.isRequired
+  setEditModalVisiblity: PropTypes.func.isRequired,
+  data: PropTypes.object.isRequired
 };
 
 export default AppointmentEdit;

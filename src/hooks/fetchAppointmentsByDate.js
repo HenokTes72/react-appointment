@@ -61,25 +61,18 @@ const useFetchAppointmentsByDate = (
         });
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
-        const professionals = [];
+        // const professionals = [];
         let schedules = [];
         results.forEach(result => {
-          const { success, profesionales, horarios } = result;
+          const { success, horarios } = result;
           if (success) {
-            const match = professionals.find(
-              prof => prof.id === profesionales.id
-            );
-            const isAdded = match !== undefined;
-            if (!isAdded) {
-              professionals.push(profesionales);
-            }
             schedules = schedules.concat([...horarios]);
           }
         });
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',
-            payload: { professionals, schedules }
+            payload: schedules
           });
         }
       } catch (error) {
