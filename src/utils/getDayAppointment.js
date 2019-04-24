@@ -13,6 +13,17 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
     const dateMatches = schedules.filter(
       appointment => appointment.slot_date === date
     );
+    // eslint-disable-next-line no-console
+    console.log(
+      'DATE',
+      date,
+      'DAY MATCHES: ',
+      dateMatches.length,
+      'SCHEDULES:',
+      schedules.length,
+      'DATES',
+      JSON.stringify([...schedules].map(schedule => schedule.slot_date))
+    );
     if (dateMatches === undefined) {
       return [];
     }
@@ -24,6 +35,8 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
         filteredMatches.push(match);
       }
     });
+    // eslint-disable-next-line no-console
+    console.log('FILTERED MATCHES: ', filteredMatches.length);
     const getProfessionalName = id => {
       const professional = [...doctores].find(prof => prof.user_id === id);
       return `${professional.first_name} ${professional.last_name}`;
@@ -46,8 +59,11 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
         )
       ),
       title: getProfessionalName(appointment.doctor_id),
-      bgColor: 'red'
+      bgColor: 'red',
+      doctor_id: appointment.doctor_id
     }));
+    // eslint-disable-next-line no-console
+    console.log('RETURNING HORARIOS: ', horarios.length);
     return horarios;
   }
   return [];

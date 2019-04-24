@@ -31,7 +31,7 @@ const CustomCheckbox = styled(Checkbox)`
 
 const Professionals = ({
   professionals,
-  filterOneMonthAppointments,
+  // filterOneMonthAppointments,
   filterOneDayAppointments
 }) => {
   const colors = ['brown', 'purple', 'pink', 'red', 'yellow'];
@@ -57,7 +57,7 @@ const Professionals = ({
             }
             setFilteredIds(updatedIds);
             filterOneDayAppointments(updatedIds);
-            filterOneMonthAppointments(updatedIds);
+            // filterOneMonthAppointments(updatedIds);
           }}
         >
           {`${professional.first_name} ${professional.last_name}`}
