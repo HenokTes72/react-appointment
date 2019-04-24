@@ -46,7 +46,7 @@ const useFetchUserByEmail = (initialData = []) => {
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        const result = await getUserByEmail({ email });
+        const result = await getUserByEmail({ query: email });
         const data = result.data.success ? result.data : {};
         if (fieldValueFunc !== null) {
           const { first_name: firstName, last_name: lastName, telefono } =

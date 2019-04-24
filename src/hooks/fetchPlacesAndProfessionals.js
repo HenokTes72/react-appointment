@@ -44,7 +44,7 @@ const useFetchPlaceAndProfessional = ({
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        const result = await getBasicInfo({ remote: false });
+        const result = await getBasicInfo();
         const { doctores } = result.data;
         const professionalIds = doctores.map(doc => doc.user_id);
         setProfessionalIds(professionalIds);

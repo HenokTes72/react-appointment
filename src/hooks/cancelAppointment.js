@@ -47,7 +47,7 @@ const userCancelAppointment = (initialData = {}) => {
     const cancelAppointment = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        const result = await doAppointmentCancel({ remote: false });
+        const result = await doAppointmentCancel();
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',

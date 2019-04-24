@@ -78,8 +78,7 @@ const HomePage = ({ isMobileScreen }) => {
           {isFetchByMonthLoading ? (
             <LoadingIndicator />
           ) : (
-            schedules &&
-            doctores && (
+            schedules && (
               <Calendar
                 appointmentDates={[...schedules].map(
                   schedule => schedule.slot_date
