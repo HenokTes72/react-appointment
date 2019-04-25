@@ -4,10 +4,10 @@ import { Modal } from 'antd';
 import PropTypes from 'prop-types';
 
 import LoadingIndicator from '../LoadingIndicator';
-import { CalendarWrapper, AppointmentWrapper } from './AppointmentWrapper';
+import { CalendarWrapper, AppointmentWrapper } from './WrapperStyles';
 import Calendar from './Calendar';
 import Professionals from './Professionals';
-import AppointmentHeader from './AppointmentHeader';
+import AppointmentHeader from './HeaderStyle';
 import Header2 from '../H2';
 import DayView from './DayView';
 import withMobile from '../../utils/withMobile';
@@ -36,6 +36,7 @@ const HomePage = ({ isMobileScreen }) => {
     isFetchByMonthLoading,
     isFetchByMonthError,
     schedules,
+    schedulesCache,
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
@@ -52,23 +53,16 @@ const HomePage = ({ isMobileScreen }) => {
     isAppointmentLoading,
     isAppointmentError,
     appointmentData,
-    setIdAndName
+    setIdAndName,
+    updateAppointmentData
   } = useFetchAppointmentById();
 
-  const updateAppointmentData = data => {
-    const { consulta, place, phone } = data;
-    appointmentData.place = place;
-    appointmentData.phone = phone;
-    appointmentData.title = consulta;
-  };
-
+  const [selectedDate, setSelectedDate] = useState(null);
   const [oneDayAppointments, setOneDayAppointments] = useState([]);
 
-  const [showEditModal, setEditModal] = useState(false);
-  const [showCreateModal, setCreateModal] = useState(false);
-  const [showEventModal, setEventModal] = useState(false);
-
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [showEditModal, setEditModalVisibility] = useState(false);
+  const [showCreateModal, setCreateModalVisibility] = useState(false);
+  const [showEventModal, setEventModalVisibility] = useState(false);
 
   return (
     <>
@@ -80,9 +74,7 @@ const HomePage = ({ isMobileScreen }) => {
           ) : (
             schedules && (
               <Calendar
-                appointmentDates={[...schedules].map(
-                  schedule => schedule.slot_date
-                )}
+                schedules={schedules}
                 setSelectedMonth={setSelectedMonth}
                 daySelected={date => {
                   setSelectedDate(date);
@@ -105,10 +97,12 @@ const HomePage = ({ isMobileScreen }) => {
             doctores && (
               <Professionals
                 professionals={doctores}
-                filterOneMonthAppointments={filterSchedules}
+                filterOneMonthAppointments={doctorIds => {
+                  filterSchedules(doctorIds);
+                }}
                 filterOneDayAppointments={doctorIds => {
                   const appointments = getDayAppointments({
-                    schedules,
+                    schedules: schedulesCache,
                     doctores,
                     date: selectedDate
                   });
@@ -125,13 +119,13 @@ const HomePage = ({ isMobileScreen }) => {
 
         <AppointmentWrapper>
           <AppointmentHeader isMobileScreen={isMobileScreen}>
-            <H2>RESERVACIONS</H2>
-            <MyButton onClick={() => setCreateModal(!showCreateModal)}>
-              CREAR DATA
+            <H2>RESERVACIONES</H2>
+            <MyButton onClick={() => setCreateModalVisibility(true)}>
+              CREAR CITA
             </MyButton>
           </AppointmentHeader>
           <DayView
-            setEventModalVisiblity={() => setEventModal(!showEventModal)}
+            setEventModalVisiblity={setEventModalVisibility}
             schedules={oneDayAppointments}
             setIdAndName={setIdAndName}
           />
@@ -141,7 +135,7 @@ const HomePage = ({ isMobileScreen }) => {
         width={600}
         visible={showEventModal}
         destroyOnClose
-        onCancel={() => setEventModal(!showEventModal)}
+        onCancel={() => setEventModalVisibility(false)}
         centered={true}
         footer={null}
       >
@@ -153,13 +147,14 @@ const HomePage = ({ isMobileScreen }) => {
           (showEditModal ? (
             <AppointmentEdit
               data={appointmentData}
-              setEditModalVisiblity={() => setEditModal(!showEditModal)}
+              setEditModalVisiblity={setEditModalVisibility}
               updateDetailView={updateAppointmentData}
             />
           ) : (
             <AppointmentDetail
               data={appointmentData}
-              setEditModalVisiblity={() => setEditModal(!showEditModal)}
+              setEditModalVisiblity={setEditModalVisibility}
+              setEventModalVisibility={setEventModalVisibility}
             />
           ))
         )}
@@ -168,7 +163,7 @@ const HomePage = ({ isMobileScreen }) => {
         width={800}
         visible={showCreateModal}
         destroyOnClose
-        onCancel={() => setCreateModal(!showCreateModal)}
+        onCancel={() => setCreateModalVisibility(false)}
         centered={true}
         footer={null}
       >
@@ -182,7 +177,7 @@ const HomePage = ({ isMobileScreen }) => {
               branches={clinicas}
               durations={aMinutes}
               times={aTime}
-              toggleModal={() => setCreateModal(!showCreateModal)}
+              setCreateModalVisibility={setCreateModalVisibility}
             />
           )
         )}

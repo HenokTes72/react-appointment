@@ -79,12 +79,11 @@ const appointmentEditSchema = Yup.object().shape({
 const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
   const { consulta, place, phone } = data;
   const { setNewUpdatedData } = useUpdateAppointment();
-
   return (
     <Wrapper>
       <HeaderWrapper>
         <Icon
-          onClick={setEditModalVisiblity}
+          onClick={() => setEditModalVisiblity(true)}
           style={{ fontSize: '20px', cursor: 'pointer' }}
           type="left"
         />
@@ -99,9 +98,8 @@ const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
         }}
         onSubmit={values => {
           setNewUpdatedData(values);
-          // eslint-disable-next-line no-alert
-          alert(JSON.stringify(values));
           updateDetailView(values);
+          setEditModalVisiblity(false);
         }}
         validationSchema={appointmentEditSchema}
       >
@@ -158,7 +156,12 @@ const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
                     </FormItem>
                   </Row>
                   <FooterWrapper>
-                    <StyledButton htmlType="submit">GURDAR</StyledButton>
+                    <StyledButton
+                      htmlType="submit"
+                      onSubmit={() => setEditModalVisiblity(false)}
+                    >
+                      ACTUALIZAR
+                    </StyledButton>
                   </FooterWrapper>
                 </EditWrapper>
               </ContentWrapper>

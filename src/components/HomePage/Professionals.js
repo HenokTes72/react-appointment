@@ -31,33 +31,37 @@ const CustomCheckbox = styled(Checkbox)`
 
 const Professionals = ({
   professionals,
-  // filterOneMonthAppointments,
+  filterOneMonthAppointments,
   filterOneDayAppointments
 }) => {
   const colors = ['brown', 'purple', 'pink', 'red', 'yellow'];
-  const [filteredIds, setFilteredIds] = useState([]);
+  const [doctorsCheckBook, setDoctorsCheckBook] = useState(() => {
+    const checkBook = {};
+    professionals.forEach(professional => {
+      checkBook[professional.user_id] = true;
+    });
+    return checkBook;
+  });
   return (
     <Wrapper>
-      <P>Professionals</P>
+      <P>Profesionales</P>
       {professionals.map((professional, index) => (
         <CustomCheckbox
           key={index}
           value={professional.user_id}
+          checked={doctorsCheckBook[professional.user_id]}
           backgroundColor={colors[index % colors.length]}
           onChange={e => {
             const { value, checked } = e.target;
-            const updatedIds = [...filteredIds];
-            if (checked) {
-              updatedIds.push(value);
-            } else {
-              const i = updatedIds.indexOf(value);
-              if (i !== -1) {
-                updatedIds.splice(index, 1);
-              }
-            }
-            setFilteredIds(updatedIds);
-            filterOneDayAppointments(updatedIds);
-            // filterOneMonthAppointments(updatedIds);
+            const checkBook = { ...doctorsCheckBook };
+            checkBook[value] = checked;
+            let selectedDoctorIds = Object.keys(checkBook).filter(
+              id => checkBook[id]
+            );
+            selectedDoctorIds = selectedDoctorIds.map(id => parseInt(id, 10));
+            filterOneDayAppointments(selectedDoctorIds);
+            filterOneMonthAppointments(selectedDoctorIds);
+            setDoctorsCheckBook(checkBook);
           }}
         >
           {`${professional.first_name} ${professional.last_name}`}

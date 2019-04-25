@@ -2,6 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
 
+import moment from 'moment';
+
 import P from '../P';
 import withMobile from '../../utils/withMobile';
 
@@ -46,7 +48,17 @@ const PP = styled(P)`
 `;
 
 const Detail = ({ isMobileScreen, slotData }) => {
-  const { patient, professional, consulta, place, phone } = slotData;
+  const {
+    patient,
+    professional,
+    consulta,
+    place,
+    phone,
+    detail,
+    date,
+    start,
+    end
+  } = slotData;
   return (
     <Wrapper isMobileScreen={isMobileScreen}>
       <DetailWrapper>
@@ -55,8 +67,12 @@ const Detail = ({ isMobileScreen, slotData }) => {
           <PP>{patient}</PP>
         </DetailItems>
         <DetailItems>
-          <PB>Especialisato</PB>
+          <PB>Especialista</PB>
           <PP>{professional}</PP>
+        </DetailItems>
+        <DetailItems>
+          <PB>Centro</PB>
+          <PP>{place}</PP>
         </DetailItems>
         <DetailItems>
           <PB>Consulta</PB>
@@ -65,12 +81,20 @@ const Detail = ({ isMobileScreen, slotData }) => {
       </DetailWrapper>
       <EndDetailWrapper isMobileScreen={isMobileScreen}>
         <DetailItems>
-          <PB>Fetch y hora</PB>
-          <PP>{place}</PP>
+          <PB>Fetch y Hora</PB>
+          <PP>
+            {moment(date, 'YYYY-MM-DD').format('DD MMMM YYYY')}
+            <br />
+            {`${start} ${end}`}
+          </PP>
         </DetailItems>
         <DetailItems>
-          <PB>Teleffeno</PB>
+          <PB>Telefono</PB>
           <PP>{phone}</PP>
+        </DetailItems>
+        <DetailItems>
+          <PB>Asunto del la Cita</PB>
+          <PP>{detail}</PP>
         </DetailItems>
       </EndDetailWrapper>
     </Wrapper>

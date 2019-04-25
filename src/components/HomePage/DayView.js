@@ -4,7 +4,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import PropTypes from 'prop-types';
 
-import StyledBigCalendar from '../BigCalendar';
+import StyledBigCalendar from '../StyledBigCalendar';
 
 // Setup the localizer by providing the moment (or globalize) Object
 // to the correct localizer.
@@ -14,43 +14,7 @@ const Wrapper = styled.div`
   min-width: 300px;
 `;
 
-const MyCalendar = ({ setEventModalVisiblity, schedules, setIdAndName }) => {
-  const today = `${moment().format(
-    'MMMM'
-  )} ${moment().date()}, ${moment().year()}`;
-
-  // eslint-disable-next-line no-unused-vars
-  const dummyEvents = [
-    {
-      allDay: false,
-      start: new Date(`${today} 8:10:00`),
-      end: new Date(`${today} 9:10:00`),
-      title: 'Dr Bura, dentist',
-      bgColor: 'black'
-    },
-    {
-      allDay: false,
-      start: new Date(`${today} 2:10:00`),
-      end: new Date(`${today} 2:45:00`),
-      title: 'Dr Dave, dentist',
-      bgColor: 'lemon'
-    },
-    {
-      allDay: false,
-      start: new Date(`${today} 11:13:00`),
-      end: new Date(`${today} 13:00:00`),
-      title: 'Dr Henok, football',
-      bgColor: 'purple'
-    },
-    {
-      allDay: false,
-      start: new Date(`${today} 1:30:00`),
-      end: new Date(`${today} 2:30:00`),
-      title: 'Dr Mezi, tennsi',
-      bgColor: 'green'
-    }
-  ];
-
+const DayView = ({ setEventModalVisiblity, schedules, setIdAndName }) => {
   const eventStyleGetter = event => {
     const backgroundColor = event.bgColor;
     const style = {
@@ -68,7 +32,7 @@ const MyCalendar = ({ setEventModalVisiblity, schedules, setIdAndName }) => {
   };
 
   const onEventSelect = event => {
-    setEventModalVisiblity();
+    setEventModalVisiblity(true);
     setIdAndName({ id: event.id, name: event.title });
   };
 
@@ -82,15 +46,19 @@ const MyCalendar = ({ setEventModalVisiblity, schedules, setIdAndName }) => {
         endAccessor="end"
         eventPropGetter={eventStyleGetter}
         onSelectEvent={event => onEventSelect(event)}
+        formats={{
+          timeGutterFormat: (date, culture, localizzzer) =>
+            localizzzer.format(date, 'hh:mm A', culture)
+        }}
       />
     </Wrapper>
   );
 };
 
-MyCalendar.propTypes = {
+DayView.propTypes = {
   setEventModalVisiblity: PropTypes.func.isRequired,
   schedules: PropTypes.array.isRequired,
   setIdAndName: PropTypes.func.isRequired
 };
 
-export default MyCalendar;
+export default DayView;

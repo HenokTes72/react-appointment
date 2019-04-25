@@ -16,7 +16,7 @@ const LOCAL_END_POINT = 'http://localhost:3000/api/v1/appointment';
 const DEV_REMOTE_END_POINT = 'http://test1.saludvitale.com';
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 const IS_REMOTE = true;
-const USE_MOCK = false;
+const USE_MOCK = true;
 const USE_PROXY = true;
 
 const isRemote = remote => (remote === undefined ? IS_REMOTE : remote);
@@ -58,7 +58,7 @@ export const getAppointmentByDate = mockedWith({
 
 const urlAppointmentById = ({ id, secret, remote = IS_REMOTE }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}getUserDocinst?slot_id=${id}&_=${secret}`
+    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/getUserDocinst?slot_id=${id}&_=${secret}`
     : `${LOCAL_END_POINT}/details/${id}`;
 
 export const getAppointmentById = mockedWith({

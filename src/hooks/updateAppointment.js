@@ -49,8 +49,9 @@ const useUpdateAppointment = (initialData = {}) => {
       try {
         if (state.newUpdatedData) {
           const bodyFormData = new FormData();
-          state.newUpdatedData.forEach(field => {
-            bodyFormData.set(field.name, field.value);
+          const { newUpdatedData: data } = state;
+          Object.keys(data).forEach(key => {
+            bodyFormData.set(key, data[key]);
           });
           const result = await doAppointmentUpdate({
             method: 'put',

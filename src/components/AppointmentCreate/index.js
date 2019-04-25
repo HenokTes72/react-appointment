@@ -126,7 +126,7 @@ const AppointmentCreate = ({
   branches,
   durations,
   times,
-  toggleModal
+  setCreateModalVisibility
 }) => {
   const { emails, setQuery } = useFetchEmails();
 
@@ -150,6 +150,19 @@ const AppointmentCreate = ({
       return user[attr];
     }
     return paciente ? paciente[attr] : undefined;
+  };
+
+  const setSubmit = actions => success => {
+    if (success) {
+      // eslint-disable-next-line no-alert
+      alert('Your appointment is recorded, but is waiting for a working API');
+      actions.setSubmitting(success);
+      setCreateModalVisibility(false);
+    } else {
+      // eslint-disable-next-line no-alert
+      alert('Error creating an appointment');
+      setCreateModalVisibility(true);
+    }
   };
 
   return (
@@ -198,18 +211,10 @@ const AppointmentCreate = ({
             hasta: '08:10 AM',
             detalle: values.appointment.subject
           };
-          const setSubmitting = success => {
-            actions.setSubmitting(success);
-            if (success) {
-              toggleModal();
-            }
-          };
-          toggleModal();
-          setNewAppointmentData(data, setSubmitting);
-          // eslint-disable-next-line no-alert
-          alert(
-            'Your appointment is recorded, but is waiting for a working API'
-          );
+          setNewAppointmentData({
+            data,
+            submitter: setSubmit(actions)
+          });
         }}
         validationSchema={createAppointmentSchema}
       >
@@ -465,7 +470,7 @@ AppointmentCreate.propTypes = {
   branches: PropTypes.array.isRequired,
   durations: PropTypes.array.isRequired,
   times: PropTypes.array.isRequired,
-  toggleModal: PropTypes.func.isRequired
+  setCreateModalVisibility: PropTypes.func.isRequired
 };
 
 export default withMobile(AppointmentCreate);

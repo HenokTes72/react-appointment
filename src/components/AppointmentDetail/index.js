@@ -13,19 +13,27 @@ const Wrapper = styled.div`
   flex-direction: column;
 `;
 
-const AppointmentDetail = ({ data, setEditModalVisiblity }) => {
+const AppointmentDetail = ({
+  data,
+  setEditModalVisiblity,
+  setEventModalVisibility
+}) => {
   return (
     <Wrapper>
       <Profile />
       {data && <Detail slotData={data} />}
-      <Footer setEditModalVisiblity={setEditModalVisiblity} />
+      <Footer
+        setEditModalVisiblity={setEditModalVisiblity}
+        setEventModalVisibility={setEventModalVisibility}
+      />
     </Wrapper>
   );
 };
 
 AppointmentDetail.propTypes = {
   data: PropTypes.object.isRequired,
-  setEditModalVisiblity: PropTypes.func.isRequired
+  setEditModalVisiblity: PropTypes.func.isRequired,
+  setEventModalVisibility: PropTypes.func.isRequired
 };
 
 export default AppointmentDetail;

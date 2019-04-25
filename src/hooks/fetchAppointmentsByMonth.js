@@ -6,8 +6,18 @@ import getMonthDates from '../utils/getMonthDates';
 
 import { getAppointmentByDate } from '../config';
 
+const schedulesSelector = (state, action) => {
+  const { schedulesCache } = state;
+  const { payload: selectedDoctorIds } = action;
+  const filteredSchedules = schedulesCache.filter(
+    schedule => selectedDoctorIds.indexOf(schedule.doctor_id) !== -1
+  );
+  return filteredSchedules;
+};
+
 const dataFetchReducer = (state, action) => {
-  switch (action.type) {
+  const { type, payload } = action;
+  switch (type) {
     case 'FETCH_INIT':
       return {
         ...state,
@@ -19,8 +29,8 @@ const dataFetchReducer = (state, action) => {
         ...state,
         isFetchByMonthLoading: false,
         isFetchByMonthError: false,
-        schedules: action.payload,
-        schedulesCache: action.payload
+        schedules: [...payload],
+        schedulesCache: [...payload]
       };
     case 'FETCH_FAILURE':
       return {
@@ -31,9 +41,7 @@ const dataFetchReducer = (state, action) => {
     case 'FILTER_SCHEDULES':
       return {
         ...state,
-        schedules: state.schedulesCache.filter(
-          schedule => action.payload.indexOf(schedule.doctor_id) !== -1
-        )
+        schedules: schedulesSelector(state, action)
       };
     default:
       throw new Error();

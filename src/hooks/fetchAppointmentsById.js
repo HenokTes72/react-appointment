@@ -2,6 +2,16 @@ import { useState, useEffect, useReducer } from 'react';
 
 import { getAppointmentById } from '../config';
 
+const updateSelector = (state, newData) => {
+  const { appointmentData } = state;
+  const updatedData = { ...appointmentData };
+  const { consulta, place, phone } = newData;
+  updatedData.place = place;
+  updatedData.phone = phone;
+  updatedData.title = consulta;
+  return updatedData;
+};
+
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_INIT':
@@ -23,12 +33,17 @@ const dataFetchReducer = (state, action) => {
         isAppointmentLoading: false,
         isAppointmentError: true
       };
+    case 'UPDATE_APPOINTMENT':
+      return {
+        ...state,
+        appointmentData: updateSelector(state, action.payload)
+      };
     default:
       throw new Error();
   }
 };
 
-const useAppointmentFetchById = (initialData = {}, secret = 1555334482919) => {
+const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isAppointmentLoading: false,
     isAppointmentError: false,
@@ -51,7 +66,11 @@ const useAppointmentFetchById = (initialData = {}, secret = 1555334482919) => {
           consulta: userData.tipoConsulta,
           place: userData.clinica,
           phone: userData.telefono,
-          professional: idAndName.name
+          professional: idAndName.name,
+          detail: userData.detalle,
+          date: userData.slot_date,
+          start: userData.inicio,
+          end: userData.fin || '-'
         };
         if (!didCancel) {
           dispatch({
@@ -73,6 +92,10 @@ const useAppointmentFetchById = (initialData = {}, secret = 1555334482919) => {
     };
   }, [idAndName]);
 
-  return { ...state, setIdAndName };
+  const updateAppointmentData = newData => {
+    dispatch({ type: 'UPDATE_APPOINTMENT', payload: newData });
+  };
+
+  return { ...state, setIdAndName, updateAppointmentData };
 };
-export default useAppointmentFetchById;
+export default useFetchAppointmentById;

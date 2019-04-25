@@ -11,7 +11,7 @@ const Wrapper = styled.div`
   margin-bottom: 10px;
 `;
 
-const Footer = ({ setEditModalVisiblity }) => {
+const Footer = ({ setEditModalVisiblity, setEventModalVisibility }) => {
   const { cancel, setCancel } = useCancelAppointment();
   const cancelAppointment = () => {
     setCancel(!cancel);
@@ -19,18 +19,21 @@ const Footer = ({ setEditModalVisiblity }) => {
     alert(
       'You have successfully cancelled the appointment, waiting for a working API'
     );
-    setEditModalVisiblity(false);
+    setEventModalVisibility(false);
   };
   return (
     <Wrapper>
-      <StyledButton onClick={setEditModalVisiblity}>EDITAR</StyledButton>
+      <StyledButton onClick={() => setEditModalVisiblity(true)}>
+        EDITAR
+      </StyledButton>
       <StyledButton onClick={cancelAppointment}>CANCLEAR</StyledButton>
     </Wrapper>
   );
 };
 
 Footer.propTypes = {
-  setEditModalVisiblity: PropTypes.func.isRequired
+  setEditModalVisiblity: PropTypes.func.isRequired,
+  setEventModalVisibility: PropTypes.func.isRequired
 };
 
 export default Footer;

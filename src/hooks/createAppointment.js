@@ -42,13 +42,13 @@ const useCreateAppointment = (initialData = {}) => {
   useEffect(() => {
     let didCancel = false;
 
-    const fetchData = async () => {
+    const createAppointment = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
         const bodyFormData = new FormData();
-        // newAppointmentData.forEach(field => {
-        //   bodyFormData.set(field.name, field.value);
-        // });
+        Object.keys(newAppointmentData).forEach(name => {
+          bodyFormData.set(name, newAppointmentData[name]);
+        });
         const result = await doAppointmentCreate({
           method: 'post',
           postData: bodyFormData,
@@ -70,15 +70,15 @@ const useCreateAppointment = (initialData = {}) => {
       }
     };
 
-    fetchData();
+    createAppointment();
 
     return () => {
       didCancel = true;
     };
   }, [newAppointmentData]);
 
-  const setNewAppointmentData = (data, setSubmit) => {
-    setSetSubmitting(setSubmit);
+  const setNewAppointmentData = ({ data, submitter }) => {
+    setSetSubmitting(() => submitter);
     setCreateData(data);
   };
   return { ...state, setNewAppointmentData };

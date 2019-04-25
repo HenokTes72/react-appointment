@@ -5,34 +5,15 @@ import 'react-day-picker/lib/style.css';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
+// Include the locale utils designed for moment
+import MomentLocaleUtils from 'react-day-picker/moment';
+
+// Make sure moment.js has the required locale data
+import 'moment/locale/es';
+
 const Wrapper = styled.div`
   margin-bottom: 25px;
 `;
-
-const MONTHS = [
-  'Gennaio',
-  'Febbraio',
-  'Marzo',
-  'Aprile',
-  'Maggio',
-  'Giugno',
-  'Luglio',
-  'Agosto',
-  'Settembre',
-  'Ottobre',
-  'Novembre',
-  'Dicembre'
-];
-const WEEKDAYS_LONG = [
-  'Domenica',
-  'Lunedì',
-  'Martedì',
-  'Mercoledì',
-  'Giovedì',
-  'Venerdì',
-  'Sabato'
-];
-const WEEKDAYS_SHORT = ['Do', 'Lu', 'Ma', 'Me', 'Gi', 'Ve', 'Sa'];
 
 const modifiers = {
   alldays: { daysOfWeek: [0, 1, 2, 3, 4, 5, 6] }
@@ -44,32 +25,26 @@ const allDayStyle = `.DayPicker-Day--alldays {
   margin-top: 3px !important;
 }`;
 
-class Calendar extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleDayClick = this.handleDayClick.bind(this);
-    this.isSelected = this.isSelected.bind(this);
-    this.isDisabled = this.isDisabled.bind(this);
-    this.state = { appointmentDates: props.appointmentDates };
-  }
+const Calendar = ({
+  schedules,
+  daySelected,
+  initialMonth,
+  setSelectedMonth
+}) => {
+  const appointmentDates = schedules.map(schedule => schedule.slot_date);
 
-  handleDayClick(day) {
-    this.props.daySelected(moment(day).format('YYYY-MM-DD'));
-  }
+  const handleDayClick = day => {
+    daySelected(moment(day).format('YYYY-MM-DD'));
+  };
 
-  isSelected(day) {
-    const { appointmentDates } = this.state;
-    if (!appointmentDates) {
-      return false;
-    }
+  const isSelected = day => {
     const match = appointmentDates.find(date => {
       return date === moment(day).format('YYYY-MM-DD');
     });
     return match !== undefined;
-  }
+  };
 
-  isDisabled(day) {
-    const { appointmentDates } = this.state;
+  const isDisabled = day => {
     if (!appointmentDates) {
       return false;
     }
@@ -77,38 +52,31 @@ class Calendar extends React.Component {
       return date === moment(day).format('YYYY-MM-DD');
     });
     return match === undefined;
-  }
+  };
 
-  render() {
-    return (
-      <Wrapper>
-        <div>
-          <style>{allDayStyle}</style>
-          <DayPicker
-            locale="it"
-            modifiers={modifiers}
-            months={MONTHS}
-            initialMonth={moment(
-              this.props.initialMonth,
-              'YYYY-MM-DD'
-            ).toDate()}
-            weekdaysLong={WEEKDAYS_LONG}
-            weekdaysShort={WEEKDAYS_SHORT}
-            selectedDays={this.isSelected}
-            disabledDays={this.isDisabled}
-            onMonthChange={date => {
-              this.props.setSelectedMonth(date);
-            }}
-            onDayClick={this.handleDayClick}
-          />
-        </div>
-      </Wrapper>
-    );
-  }
-}
+  return (
+    <Wrapper>
+      <div>
+        <style>{allDayStyle}</style>
+        <DayPicker
+          localeUtils={MomentLocaleUtils}
+          locale={'es'}
+          modifiers={modifiers}
+          initialMonth={moment(initialMonth, 'YYYY-MM-DD').toDate()}
+          selectedDays={isSelected}
+          disabledDays={isDisabled}
+          onMonthChange={date => {
+            setSelectedMonth(moment(date).format('YYYY-MM-DD'));
+          }}
+          onDayClick={handleDayClick}
+        />
+      </div>
+    </Wrapper>
+  );
+};
 
 Calendar.propTypes = {
-  appointmentDates: PropTypes.arrayOf(PropTypes.string).isRequired,
+  schedules: PropTypes.arrayOf(PropTypes.object).isRequired,
   setSelectedMonth: PropTypes.func.isRequired,
   initialMonth: PropTypes.string.isRequired,
   daySelected: PropTypes.func.isRequired
