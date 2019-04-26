@@ -102,11 +102,9 @@ const createAppointmentSchema = Yup.object().shape({
       .email('Invalid email')
       .required('Required'),
     firstName: Yup.string()
-      .min(2, 'Too short')
       .max(50, 'Too Long')
       .required('Required'),
     surName: Yup.string()
-      .min(2, 'Too short')
       .max(50, 'Too Long')
       .required('Required'),
     phone: Yup.string().required('Required')

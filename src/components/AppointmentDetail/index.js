@@ -23,6 +23,10 @@ const AppointmentDetail = ({
       <Profile />
       {data && <Detail slotData={data} />}
       <Footer
+        deleteAppointmentFromState={() => {
+          // eslint-disable-next-line no-console
+          console.log('hello');
+        }}
         setEditModalVisiblity={setEditModalVisiblity}
         setEventModalVisibility={setEventModalVisibility}
       />

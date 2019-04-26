@@ -11,7 +11,11 @@ const Wrapper = styled.div`
   margin-bottom: 10px;
 `;
 
-const Footer = ({ setEditModalVisiblity, setEventModalVisibility }) => {
+const Footer = ({
+  setEditModalVisiblity,
+  setEventModalVisibility,
+  deleteAppointmentFromState
+}) => {
   const { cancel, setCancel } = useCancelAppointment();
   const cancelAppointment = () => {
     setCancel(!cancel);
@@ -19,6 +23,7 @@ const Footer = ({ setEditModalVisiblity, setEventModalVisibility }) => {
     alert(
       'You have successfully cancelled the appointment, waiting for a working API'
     );
+    deleteAppointmentFromState();
     setEventModalVisibility(false);
   };
   return (
@@ -32,6 +37,7 @@ const Footer = ({ setEditModalVisiblity, setEventModalVisibility }) => {
 };
 
 Footer.propTypes = {
+  deleteAppointmentFromState: PropTypes.func.isRequired,
   setEditModalVisiblity: PropTypes.func.isRequired,
   setEventModalVisibility: PropTypes.func.isRequired
 };

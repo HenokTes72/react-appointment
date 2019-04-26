@@ -70,7 +70,7 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
           detail: userData.detalle,
           date: userData.slot_date,
           start: userData.inicio,
-          end: userData.fin || '-'
+          end: userData.fin || ''
         };
         if (!didCancel) {
           dispatch({

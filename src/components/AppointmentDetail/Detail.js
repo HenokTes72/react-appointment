@@ -81,11 +81,11 @@ const Detail = ({ isMobileScreen, slotData }) => {
       </DetailWrapper>
       <EndDetailWrapper isMobileScreen={isMobileScreen}>
         <DetailItems>
-          <PB>Fetch y Hora</PB>
+          <PB>Fecha y Hora</PB>
           <PP>
             {moment(date, 'YYYY-MM-DD').format('DD MMMM YYYY')}
             <br />
-            {`${start} ${end}`}
+            {`${start} - ${end}`}
           </PP>
         </DetailItems>
         <DetailItems>
