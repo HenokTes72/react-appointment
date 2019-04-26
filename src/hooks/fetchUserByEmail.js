@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 
 import { getUserByEmail } from '../config';
 
@@ -23,6 +23,11 @@ const dataFetchReducer = (state, action) => {
         isUserLoading: false,
         isUserError: true
       };
+    case 'SET_EMAIL_AND_CALLBACK':
+      return {
+        ...state,
+        emailAndCallBack: action.payload
+      };
     default:
       throw new Error();
   }
@@ -32,30 +37,33 @@ const useFetchUserByEmail = (initialData = []) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isUserLoading: false,
     isUserError: false,
-    userData: initialData
+    userData: initialData,
+    emailAndCallBack: {}
   });
-
-  const [email, setEmail] = useState('');
-
-  let fieldNames = {};
-  let fieldValueFunc = null;
 
   useEffect(() => {
     let didCancel = false;
 
-    const fetchData = async () => {
+    const fetchEmails = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
+        const {
+          emailAndCallBack: { callback, email }
+        } = state;
         const result = await getUserByEmail({ query: email });
         const data = result.data.success ? result.data : {};
-        if (fieldValueFunc !== null) {
-          const { first_name: firstName, last_name: lastName, telefono } =
-            data.user || data.paciente;
-          fieldValueFunc(fieldNames.firstName, firstName);
-          fieldValueFunc(fieldNames.lastName, lastName);
-          fieldValueFunc(fieldNames.phone, telefono);
-        }
         if (!didCancel) {
+          if (callback) {
+            const { user, paciente } = data;
+            const getAttr = attr =>
+              (user && user[attr]) || (paciente && paciente[attr]);
+            callback({
+              nombre: getAttr('first_name'),
+              apellido: getAttr('last_name'),
+              telefono: getAttr('telefono'),
+              email
+            });
+          }
           dispatch({
             type: 'FETCH_SUCCESS',
             payload: data
@@ -68,18 +76,18 @@ const useFetchUserByEmail = (initialData = []) => {
       }
     };
 
-    fetchData();
+    fetchEmails();
 
     return () => {
       didCancel = true;
     };
-  }, [email]);
+  }, [state.emailAndCallBack]);
 
-  const setFieldNameAndFunc = (names, func) => {
-    fieldNames = names;
-    fieldValueFunc = func;
+  const setEmailAndCallback = emailAndCallBack => {
+    // eslint-disable-next-line no-console
+    console.log('SET CALL BACK CALLED');
+    dispatch({ type: 'SET_EMAIL_AND_CALLBACK', payload: emailAndCallBack });
   };
-
-  return { ...state, setEmail, setFieldNameAndFunc };
+  return { ...state, setEmailAndCallback };
 };
 export default useFetchUserByEmail;

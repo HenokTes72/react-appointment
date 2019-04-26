@@ -797,6 +797,76 @@ const mockAppointmentCancel = () => {
   };
 };
 
+const mockPatientByName = ({ name = null }) => {
+  const fakeData = {
+    paciente: [
+      {
+        id: 1817,
+        cedula: null,
+        nombre: 'Frank',
+        segundo_nombre: null,
+        apellido: 'Catamo',
+        segundo_apellido: null,
+        telefono: 2147483647,
+        celular: null,
+        telefono_laboral: null
+      },
+      {
+        id: 610,
+        cedula: 'E8-115959',
+        nombre: 'WILLEM',
+        segundo_nombre: 'NULL',
+        apellido: 'FRANKE',
+        segundo_apellido: 'NULL',
+        telefono: 6672,
+        celular: 0,
+        telefono_laboral: 0
+      },
+      {
+        id: 1194,
+        cedula: 'NULL',
+        nombre: 'FRANKLIN',
+        segundo_nombre: 'NULL',
+        apellido: 'OTHON',
+        segundo_apellido: 'NULL',
+        telefono: 6140,
+        celular: 0,
+        telefono_laboral: 0
+      },
+      {
+        id: 1744,
+        cedula: '9-183-59',
+        nombre: 'FRANKLIN',
+        segundo_nombre: 'NULL',
+        apellido: 'VERGARA',
+        segundo_apellido: 'NULL',
+        telefono: 6578,
+        celular: 0,
+        telefono_laboral: 0
+      }
+    ],
+    success: true
+  };
+  if (name !== null) {
+    const { paciente } = fakeData;
+    const filteredPatients = paciente.filter(
+      ({ nombre, apellido }) =>
+        `${nombre} ${apellido}`.toLowerCase().indexOf(name.toLowerCase()) !== -1
+    );
+    return {
+      data: {
+        paciente: filteredPatients,
+        success: true
+      },
+      success: true
+    };
+  }
+  return {
+    success: true,
+    data: fakeData
+  };
+};
+
 module.exports = {
   mockAllAppointment,
   mockBasicInfo,
@@ -806,5 +876,6 @@ module.exports = {
   mockAppointmentByDate,
   mockAppointmentCreate,
   mockAppointmentUpdate,
-  mockAppointmentCancel
+  mockAppointmentCancel,
+  mockPatientByName
 };

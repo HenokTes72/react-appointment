@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/prop-types */
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
@@ -103,14 +101,7 @@ const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
         }}
         validationSchema={appointmentEditSchema}
       >
-        {props => {
-          const {
-            values,
-            errors,
-            setFieldValue,
-            handleSubmit,
-            handleChange
-          } = props;
+        {({ values, errors, handleSubmit, handleChange }) => {
           return (
             <Form onSubmit={handleSubmit}>
               <ContentWrapper>
@@ -121,7 +112,7 @@ const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
                       <StyledDatePicker
                         id="date"
                         value={values.date}
-                        onChange={e => setFieldValue('date', e)}
+                        onChange={handleChange}
                       />
                       {errors.date && <Error>{errors.date}</Error>}
                     </FormItem>
@@ -175,7 +166,8 @@ const AppointmentEdit = ({ setEditModalVisiblity, updateDetailView, data }) => {
 
 AppointmentEdit.propTypes = {
   setEditModalVisiblity: PropTypes.func.isRequired,
-  data: PropTypes.object.isRequired
+  data: PropTypes.object.isRequired,
+  updateDetailView: PropTypes.func.isRequired
 };
 
 export default AppointmentEdit;

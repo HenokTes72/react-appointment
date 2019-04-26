@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 
 import { doAppointmentCreate } from '../config';
 
@@ -23,6 +23,16 @@ const dataFetchReducer = (state, action) => {
         isCreateResponseLoading: false,
         isCreateResponseError: true
       };
+    case 'SET_SUBMITTER':
+      return {
+        ...state,
+        setSubmitting: action.payload
+      };
+    case 'SET_CREATE_DATA':
+      return {
+        ...state,
+        newAppointmentData: action.payload
+      };
     default:
       throw new Error();
   }
@@ -32,12 +42,10 @@ const useCreateAppointment = (initialData = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isCreateResponseLoading: false,
     isCreateResponseError: false,
-    createResponse: initialData
+    createResponse: initialData,
+    newAppointmentData: {},
+    setSubmitting: null
   });
-
-  const [newAppointmentData, setCreateData] = useState({});
-
-  const [setSubmitting, setSetSubmitting] = useState(null);
 
   useEffect(() => {
     let didCancel = false;
@@ -45,6 +53,7 @@ const useCreateAppointment = (initialData = {}) => {
     const createAppointment = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
+        const { newAppointmentData, setSubmitting } = state;
         const bodyFormData = new FormData();
         Object.keys(newAppointmentData).forEach(name => {
           bodyFormData.set(name, newAppointmentData[name]);
@@ -75,11 +84,11 @@ const useCreateAppointment = (initialData = {}) => {
     return () => {
       didCancel = true;
     };
-  }, [newAppointmentData]);
+  }, [state.newAppointmentData]);
 
   const setNewAppointmentData = ({ data, submitter }) => {
-    setSetSubmitting(() => submitter);
-    setCreateData(data);
+    dispatch({ type: 'SET_SUBMITTER', payload: () => submitter });
+    dispatch({ type: 'SET_CREATE_DATA', payload: data });
   };
   return { ...state, setNewAppointmentData };
 };

@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import React, { useState } from 'react';
+import React from 'react';
 import { Checkbox, Input, Select, Form } from 'antd';
 import styled, { css } from 'styled-components';
 import PropTypes from 'prop-types';
@@ -21,6 +20,7 @@ import Footer from './Footer';
 import { StyledButton } from '../Button';
 
 import useFetchEmails from '../../hooks/fetchEmails';
+import useFetchNames from '../../hooks/fetchNames';
 import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
 import useAppointmentCreate from '../../hooks/createAppointment';
 
@@ -92,8 +92,8 @@ const WidthStyledButton = styled(StyledButton)`
   width: 250px;
 `;
 
-// eslint-disable-next-line max-len
-// const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+// const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*
+// )| ([0 - 9]{ 2, 4 })[\\-] *)*? [0 - 9]{ 3, 4 }?[\\-] * [0 - 9]{ 3, 4 }?$ /;
 
 const createAppointmentSchema = Yup.object().shape({
   specialist: Yup.string().required('Required'),
@@ -129,28 +129,9 @@ const AppointmentCreate = ({
   setCreateModalVisibility
 }) => {
   const { emails, setQuery } = useFetchEmails();
-
-  const handleSearch = value => {
-    setQuery(value);
-  };
-
-  const {
-    userData: { user, paciente },
-    setEmail,
-    setFieldNameAndFunc
-  } = useFetchUserByEmail();
-
+  const { namedUsersData, setName } = useFetchNames();
+  const { setEmailAndCallback } = useFetchUserByEmail();
   const { setNewAppointmentData } = useAppointmentCreate();
-
-  const [doctor, setDoctor] = useState({});
-  const [branch, setBranch] = useState({});
-
-  const getPatientInfo = attr => {
-    if (user) {
-      return user[attr];
-    }
-    return paciente ? paciente[attr] : undefined;
-  };
 
   const setSubmit = actions => success => {
     if (success) {
@@ -182,59 +163,37 @@ const AppointmentCreate = ({
           emailCheck: false
         }}
         onSubmit={(values, actions) => {
-          const data = {
-            entre: values.appointment.duration,
-            idUser: doctor.user_id,
-            id_user: doctor.user_id,
-            doctorId: doctor.user_id,
-            buscador_paciente: `${values.patient.firstName} ${
-              values.patient.lastName
-            }`,
-            _token: '1j2VstsP7oyPr7Jf3ELzgLkaJb8zWlHnxPSxv2Yk',
-            id_paciente: getPatientInfo('id'),
-            Email: values.patient.email,
-            checkemail1: 0,
-            Cedula: getPatientInfo('cedula'),
-            Nombre: values.patient.firstName,
-            Apellido: values.patient.lastName,
-            telefono: values.patient.phone,
-            clinica: branch.id,
-            date1: values.appointment.date,
-            date2: values.appointment.date,
-            desdeD: values.appointment.startTime,
-            time_slot: values.appointment.duration,
-            hastaD: '08:10 AM',
-            fecha2: values.appointment.date,
-            fecha1: values.appointment.date,
-            slotH: values.appointment.duration,
-            desde: values.appointment.startTime,
-            hasta: '08:10 AM',
-            detalle: values.appointment.subject
-          };
           setNewAppointmentData({
-            data,
+            values,
             submitter: setSubmit(actions)
           });
         }}
         validationSchema={createAppointmentSchema}
       >
-        {props => {
-          const {
-            values,
-            errors,
-            handleChange,
-            handleSubmit,
-            setFieldValue
-          } = props;
-          setFieldNameAndFunc(
-            {
-              firstName: 'patient.firstName',
-              lastName: 'patient.surName',
-              phone: 'patient.phone'
-            },
-            setFieldValue
-          );
-
+        {({ values, errors, handleChange, handleSubmit, setFieldValue }) => {
+          const populatePatientFields = ({
+            nombre,
+            apellido,
+            telefono,
+            email
+          }) => {
+            setFieldValue('patient.lastName', apellido);
+            setFieldValue('patient.firstName', nombre);
+            setFieldValue('patient.phone', telefono);
+            setFieldValue('patient.email', email);
+          };
+          const handleNameSelect = id => {
+            const selectedPatient = namedUsersData.find(
+              usr => usr.id === parseInt(id, 10)
+            );
+            populatePatientFields(selectedPatient);
+          };
+          const getNameDataSource = () =>
+            namedUsersData.map(({ id, nombre, apellido }) => (
+              <AutoComplete.Option key={id} name={`${nombre} ${apellido}`}>
+                {`${nombre} ${apellido}`}
+              </AutoComplete.Option>
+            ));
           return (
             <Form onSubmit={handleSubmit}>
               <FormItem>
@@ -252,7 +211,6 @@ const AppointmentCreate = ({
                         selectedSpecialist.last_name
                       }`
                     );
-                    setDoctor(selectedSpecialist);
                   }}
                 >
                   {specialists.map((specialist, index) => (
@@ -289,14 +247,16 @@ const AppointmentCreate = ({
                             id="patient.email"
                             value={values.patient.email}
                             onSelect={email => {
-                              setFieldValue('patient.email', email);
-                              setEmail(email);
+                              setEmailAndCallback({
+                                email,
+                                callback: patient =>
+                                  populatePatientFields(patient)
+                              });
                             }}
                             dataSource={emails}
-                            // style={{ width: 200 }}
                             onSearch={value => {
                               setFieldValue('patient.email', value);
-                              handleSearch(value);
+                              setQuery(value);
                             }}
                           />
                         )}
@@ -314,14 +274,21 @@ const AppointmentCreate = ({
                     </FormItem>
                     <FormItem>
                       <Span>Apellido</Span>
-                      <StyledInput
-                        id="patient.surName"
-                        value={
-                          getPatientInfo('last_name') || values.patient.surName
+                      <AutoComplete
+                        style={
+                          !isMobileScreen ? { width: '66%' } : { width: '100%' }
                         }
+                        placeholder="Last Name"
+                        id="patient.lastName"
+                        value={values.patient.lastName}
                         onChange={handleChange}
-                        placeholder="Apellido"
-                        type="text"
+                        onSelect={handleNameSelect}
+                        dataSource={getNameDataSource()}
+                        optionLabelProp="name"
+                        onSearch={value => {
+                          setFieldValue('patient.lastName', value);
+                          setName(value);
+                        }}
                       />
                       {errors.patient && errors.patient.surName && (
                         <Error>{errors.patient.surName}</Error>
@@ -331,15 +298,22 @@ const AppointmentCreate = ({
                   <FormGroupRight isMobileScreen={isMobileScreen}>
                     <FormItem>
                       <Span>Nombre</Span>
-                      <StyledInput
-                        id="patient.firstName"
-                        value={
-                          getPatientInfo('first_name') ||
-                          values.patient.firstName
+
+                      <AutoComplete
+                        style={
+                          !isMobileScreen ? { width: '66%' } : { width: '100%' }
                         }
+                        placeholder="First Name"
+                        id="patient.firstName"
+                        value={values.patient.firstName}
                         onChange={handleChange}
-                        placeholder="Nombre"
-                        type="text"
+                        onSelect={handleNameSelect}
+                        dataSource={getNameDataSource()}
+                        optionLabelProp="name"
+                        onSearch={value => {
+                          setFieldValue('patient.firstName', value);
+                          setName(value);
+                        }}
                       />
                       {errors.patient && errors.patient.firstName && (
                         <Error>{errors.patient.firstName}</Error>
@@ -349,9 +323,7 @@ const AppointmentCreate = ({
                       <Span>Telefono</Span>
                       <StyledInput
                         id="patient.phone"
-                        value={
-                          getPatientInfo('telefono') || values.patient.phone
-                        }
+                        value={values.patient.phone}
                         onChange={handleChange}
                         placeholder="Telefono"
                         type="text"
@@ -375,7 +347,6 @@ const AppointmentCreate = ({
                             clinic => clinic.id === branchId
                           );
                           setFieldValue('appointment.place', clinica.nombre);
-                          setBranch(clinica);
                         }}
                       >
                         {branches.map((clinica, index) => (

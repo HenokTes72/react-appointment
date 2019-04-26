@@ -9,17 +9,21 @@ import {
   mockAppointmentByDate,
   mockAppointmentCreate,
   mockAppointmentUpdate,
-  mockAppointmentCancel
+  mockAppointmentCancel,
+  mockPatientByName
 } from './mock';
 
 const LOCAL_END_POINT = 'http://localhost:3000/api/v1/appointment';
 const DEV_REMOTE_END_POINT = 'http://test1.saludvitale.com';
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 const IS_REMOTE = true;
-const USE_MOCK = true;
+const USE_MOCK = false;
 const USE_PROXY = true;
 
 const isRemote = remote => (remote === undefined ? IS_REMOTE : remote);
+const completeRemoteUrl = endPoint =>
+  `${CORS_PROXY}${DEV_REMOTE_END_POINT}${endPoint}`;
+const completeLocalUrl = endPoint => `${LOCAL_END_POINT}${endPoint}`;
 
 const mockedWith = ({
   urlGenerator,
@@ -27,14 +31,14 @@ const mockedWith = ({
   isNonGet = false,
   useMock = USE_MOCK
 }) => async parameters => {
-  const handleNonMock = () =>
+  const execApiCall = () =>
     isNonGet
       ? axios({ url: urlGenerator({ ...parameters }), ...parameters })
       : axios(urlGenerator({ ...parameters }));
-  return useMock ? mocker() : handleNonMock();
+  return useMock ? mocker({ ...parameters }) : execApiCall();
 };
 
-const urlFetchAll = () => `${LOCAL_END_POINT}/`;
+const urlFetchAll = () => completeLocalUrl(`/`);
 
 export const getAllAppointments = mockedWith(urlFetchAll, mockAllAppointments);
 
@@ -47,8 +51,10 @@ const urlAppointmentByDate = ({
 }) =>
   isRemote(remote)
     ? // eslint-disable-next-line max-len
-      `${CORS_PROXY}${DEV_REMOTE_END_POINT}/getDisponibleIdinst?id=${professionalId}&fecha=${selectedDate}&inst=${institutionId}&_=${token}`
-    : `${LOCAL_END_POINT}/${selectedDate}`;
+      completeRemoteUrl(
+        `/getDisponibleIdinst?id=${professionalId}&fecha=${selectedDate}&inst=${institutionId}&_=${token}`
+      )
+    : completeLocalUrl(`/${selectedDate}`);
 
 export const getAppointmentByDate = mockedWith({
   urlGenerator: urlAppointmentByDate,
@@ -58,8 +64,8 @@ export const getAppointmentByDate = mockedWith({
 
 const urlAppointmentById = ({ id, secret, remote = IS_REMOTE }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/getUserDocinst?slot_id=${id}&_=${secret}`
-    : `${LOCAL_END_POINT}/details/${id}`;
+    ? completeRemoteUrl(`/getUserDocinst?slot_id=${id}&_=${secret}`)
+    : completeLocalUrl(`/details/${id}`);
 
 export const getAppointmentById = mockedWith({
   urlGenerator: urlAppointmentById,
@@ -68,8 +74,8 @@ export const getAppointmentById = mockedWith({
 
 const urlFetchEmails = ({ query, remote = IS_REMOTE }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/citas/buscaruserL?email=${query}`
-    : `${LOCAL_END_POINT}/emails`;
+    ? completeRemoteUrl(`/citas/buscaruserL?email=${query}`)
+    : completeLocalUrl(`/emails`);
 
 export const getEmails = mockedWith({
   urlGenerator: urlFetchEmails,
@@ -78,8 +84,8 @@ export const getEmails = mockedWith({
 
 const urlFetchUserByEmail = ({ query, remote = IS_REMOTE }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/buscaruser?email=${query}`
-    : `${LOCAL_END_POINT}/user/${query}`;
+    ? completeRemoteUrl(`/buscaruser?email=${query}`)
+    : completeLocalUrl(`/user/${query}`);
 
 export const getUserByEmail = mockedWith({
   urlGenerator: urlFetchUserByEmail,
@@ -88,8 +94,8 @@ export const getUserByEmail = mockedWith({
 
 const urlFetchBasicInfo = ({ remote = false }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/CitaBasic`
-    : `${LOCAL_END_POINT}/basics`;
+    ? completeRemoteUrl(`/CitaBasic`)
+    : completeLocalUrl(`/basics`);
 
 export const getBasicInfo = mockedWith({
   urlGenerator: urlFetchBasicInfo,
@@ -99,8 +105,8 @@ export const getBasicInfo = mockedWith({
 
 const urlAppointmentCreate = ({ remote = false }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/crearcitainst`
-    : `${LOCAL_END_POINT}/`;
+    ? completeRemoteUrl(`/crearcitainst`)
+    : completeLocalUrl(`/`);
 
 export const doAppointmentCreate = mockedWith({
   urlGenerator: urlAppointmentCreate,
@@ -110,8 +116,8 @@ export const doAppointmentCreate = mockedWith({
 
 const urlAppointmentUpdate = ({ remote = false }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/updatecitainst`
-    : `${LOCAL_END_POINT}/update`;
+    ? completeRemoteUrl(`/updatecitainst`)
+    : completeLocalUrl(`/update`);
 
 export const doAppointmentUpdate = mockedWith({
   urlGenerator: urlAppointmentUpdate,
@@ -121,13 +127,24 @@ export const doAppointmentUpdate = mockedWith({
 
 const urlAppointmentCancel = ({ remote = false }) =>
   isRemote(remote)
-    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}/cancelcitainst`
-    : `${LOCAL_END_POINT}/cancel`;
+    ? completeRemoteUrl(`/cancelcitainst`)
+    : completeLocalUrl(`/cancel`);
 
 export const doAppointmentCancel = mockedWith({
   urlGenerator: urlAppointmentCancel,
   mocker: mockAppointmentCancel,
   useMock: true
+});
+
+const urlPatientByName = ({ name, remote = true }) =>
+  isRemote(remote)
+    ? completeRemoteUrl(`/citas/buscarpacienteL?paciente=${name}`)
+    : completeLocalUrl(`/name`);
+
+export const getUserByName = mockedWith({
+  urlGenerator: urlPatientByName,
+  mocker: mockPatientByName,
+  useMock: false
 });
 
 export default { IS_REMOTE, USE_MOCK, USE_PROXY };
