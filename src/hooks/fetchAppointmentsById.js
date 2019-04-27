@@ -2,16 +2,6 @@ import { useState, useEffect, useReducer } from 'react';
 
 import { getAppointmentById } from '../config';
 
-const updateSelector = (state, newData) => {
-  const { appointmentData } = state;
-  const updatedData = { ...appointmentData };
-  const { consulta, place, phone } = newData;
-  updatedData.place = place;
-  updatedData.phone = phone;
-  updatedData.title = consulta;
-  return updatedData;
-};
-
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_INIT':
@@ -36,7 +26,7 @@ const dataFetchReducer = (state, action) => {
     case 'UPDATE_APPOINTMENT':
       return {
         ...state,
-        appointmentData: updateSelector(state, action.payload)
+        appointmentData: action.payload
       };
     default:
       throw new Error();

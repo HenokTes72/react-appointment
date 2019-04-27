@@ -23,16 +23,14 @@ const dataFetchReducer = (state, action) => {
         isCreateResponseLoading: false,
         isCreateResponseError: true
       };
-    case 'SET_SUBMITTER':
+    case 'SET_SUBMITTER_AND_DATA': {
+      const { submitter, data } = action.payload;
       return {
         ...state,
-        setSubmitting: action.payload
+        setSubmitting: submitter,
+        newAppointmentData: data
       };
-    case 'SET_CREATE_DATA':
-      return {
-        ...state,
-        newAppointmentData: action.payload
-      };
+    }
     default:
       throw new Error();
   }
@@ -64,6 +62,8 @@ const useCreateAppointment = (initialData = {}) => {
           config: { headers: { 'Content-Type': 'multipart/form-data' } }
         });
         if (setSubmitting !== null && result.success) {
+          // eslint-disable-next-line no-console
+          console.log('SET SUBMITTING CALLED');
           setSubmitting(true);
         }
         if (!didCancel) {
@@ -86,9 +86,8 @@ const useCreateAppointment = (initialData = {}) => {
     };
   }, [state.newAppointmentData]);
 
-  const setNewAppointmentData = ({ data, submitter }) => {
-    dispatch({ type: 'SET_SUBMITTER', payload: () => submitter });
-    dispatch({ type: 'SET_CREATE_DATA', payload: data });
+  const setNewAppointmentData = dataAndSubmitter => {
+    dispatch({ type: 'SET_SUBMITTER_AND_DATA', payload: dataAndSubmitter });
   };
   return { ...state, setNewAppointmentData };
 };

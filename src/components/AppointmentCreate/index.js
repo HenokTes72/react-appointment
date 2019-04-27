@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Checkbox, Input, Select, Form } from 'antd';
 import styled, { css } from 'styled-components';
 import PropTypes from 'prop-types';
@@ -23,6 +23,7 @@ import useFetchEmails from '../../hooks/fetchEmails';
 import useFetchNames from '../../hooks/fetchNames';
 import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
 import useAppointmentCreate from '../../hooks/createAppointment';
+import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -101,12 +102,8 @@ const createAppointmentSchema = Yup.object().shape({
     email: Yup.string()
       .email('Invalid email')
       .required('Required'),
-    firstName: Yup.string()
-      .max(50, 'Too Long')
-      .required('Required'),
-    surName: Yup.string()
-      .max(50, 'Too Long')
-      .required('Required'),
+    firstName: Yup.string().required('Required'),
+    lastName: Yup.string().required('Required'),
     phone: Yup.string().required('Required')
   }),
   appointment: Yup.object().shape({
@@ -124,12 +121,13 @@ const AppointmentCreate = ({
   branches,
   durations,
   times,
-  setCreateModalVisibility
+  addAppointmentToState
 }) => {
   const { emails, setQuery } = useFetchEmails();
   const { namedUsersData, setName } = useFetchNames();
   const { setEmailAndCallback } = useFetchUserByEmail();
   const { setNewAppointmentData } = useAppointmentCreate();
+  const { setCreateModalVisibility } = useContext(ModalVisibilityContext);
 
   const setSubmit = actions => success => {
     if (success) {
@@ -144,13 +142,29 @@ const AppointmentCreate = ({
     }
   };
 
+  const getDataToAdd = values => {
+    const { place, date, startTime, subject } = values.appointment;
+    const { firstName, lastName, phone } = values.patient;
+    return {
+      consulta: subject,
+      place,
+      phone,
+      date,
+      patient: `${firstName} ${lastName}`,
+      professional: values.specialist,
+      start: startTime,
+      end: null,
+      detail: subject
+    };
+  };
+
   return (
     <Wrapper isMobileScreen={isMobileScreen}>
-      <StyledH2>CREAR CITA</StyledH2>
+      <StyledH2>CRER CITA</StyledH2>
       <Formik
         initialValues={{
           specialist: '',
-          patient: { email: '', firstName: '', surName: '', phone: '' },
+          patient: { email: '', firstName: '', lastName: '', phone: '' },
           appointment: {
             place: '',
             date: moment(Date.now()),
@@ -162,9 +176,10 @@ const AppointmentCreate = ({
         }}
         onSubmit={(values, actions) => {
           setNewAppointmentData({
-            values,
+            data: values,
             submitter: setSubmit(actions)
           });
+          addAppointmentToState(getDataToAdd(values));
         }}
         validationSchema={createAppointmentSchema}
       >
@@ -288,8 +303,8 @@ const AppointmentCreate = ({
                           setName(value);
                         }}
                       />
-                      {errors.patient && errors.patient.surName && (
-                        <Error>{errors.patient.surName}</Error>
+                      {errors.patient && errors.patient.lastName && (
+                        <Error>{errors.patient.lastName}</Error>
                       )}
                     </FormItem>
                   </FormGroupLeft>
@@ -439,7 +454,7 @@ AppointmentCreate.propTypes = {
   branches: PropTypes.array.isRequired,
   durations: PropTypes.array.isRequired,
   times: PropTypes.array.isRequired,
-  setCreateModalVisibility: PropTypes.func.isRequired
+  addAppointmentToState: PropTypes.func.isRequired
 };
 
 export default withMobile(AppointmentCreate);

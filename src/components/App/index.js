@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { ModalVisibilityProvider } from '../../contexts/visibilityContext';
 
 import 'antd/dist/antd.css';
 import GlobalStyle from '../../global-styles';
@@ -20,7 +21,9 @@ const App = () => {
     <AppWrapper>
       <Header />
       <ContentWrapper>
-        <HomePage />
+        <ModalVisibilityProvider>
+          <HomePage />
+        </ModalVisibilityProvider>
         <Footer />
       </ContentWrapper>
       <GlobalStyle />

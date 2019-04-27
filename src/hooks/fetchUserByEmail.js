@@ -84,8 +84,6 @@ const useFetchUserByEmail = (initialData = []) => {
   }, [state.emailAndCallBack]);
 
   const setEmailAndCallback = emailAndCallBack => {
-    // eslint-disable-next-line no-console
-    console.log('SET CALL BACK CALLED');
     dispatch({ type: 'SET_EMAIL_AND_CALLBACK', payload: emailAndCallBack });
   };
   return { ...state, setEmailAndCallback };

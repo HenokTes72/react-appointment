@@ -76,7 +76,7 @@ const Calendar = ({
 };
 
 Calendar.propTypes = {
-  schedules: PropTypes.arrayOf(PropTypes.object).isRequired,
+  schedules: PropTypes.arrayOf(PropTypes.object),
   setSelectedMonth: PropTypes.func.isRequired,
   initialMonth: PropTypes.string.isRequired,
   daySelected: PropTypes.func.isRequired

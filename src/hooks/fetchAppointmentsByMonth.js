@@ -43,6 +43,11 @@ const dataFetchReducer = (state, action) => {
         ...state,
         schedules: schedulesSelector(state, action)
       };
+    case 'ADD_SCHEDULE':
+      return {
+        ...state,
+        schedules: [...state.schedules, action.payload]
+      };
     default:
       throw new Error();
   }
@@ -121,12 +126,18 @@ const useFetchAppointmentsByMonth = (
     dispatch({ type: 'FILTER_SCHEDULES', payload: doctorIds });
   };
 
+  const addToSchedules = schedule => {
+    // eslint-disable-next-line no-console
+    console.log('ADD TO SCHEDULES CALLED');
+    dispatch({ type: 'ADD_SCHEDULE', payload: schedule });
+  };
   return {
     ...state,
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
-    filterSchedules
+    filterSchedules,
+    addToSchedules
   };
 };
 export default useFetchAppointmentsByMonth;

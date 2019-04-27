@@ -72,7 +72,7 @@ const Professionals = ({
 };
 
 Professionals.propTypes = {
-  professionals: PropTypes.array.isRequired,
+  professionals: PropTypes.array,
   filterOneMonthAppointments: PropTypes.func.isRequired,
   filterOneDayAppointments: PropTypes.func.isRequired
 };

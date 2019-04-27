@@ -13,31 +13,18 @@ const Wrapper = styled.div`
   flex-direction: column;
 `;
 
-const AppointmentDetail = ({
-  data,
-  setEditModalVisiblity,
-  setEventModalVisibility
-}) => {
+const AppointmentDetail = ({ data }) => {
   return (
     <Wrapper>
       <Profile />
       {data && <Detail slotData={data} />}
-      <Footer
-        deleteAppointmentFromState={() => {
-          // eslint-disable-next-line no-console
-          console.log('hello');
-        }}
-        setEditModalVisiblity={setEditModalVisiblity}
-        setEventModalVisibility={setEventModalVisibility}
-      />
+      <Footer />
     </Wrapper>
   );
 };
 
 AppointmentDetail.propTypes = {
-  data: PropTypes.object.isRequired,
-  setEditModalVisiblity: PropTypes.func.isRequired,
-  setEventModalVisibility: PropTypes.func.isRequired
+  data: PropTypes.object.isRequired
 };
 
 export default AppointmentDetail;

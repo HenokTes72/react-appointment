@@ -1,17 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const ConditionalRender = props => (
+const ConditionalRender = ({ isError, isLoading, data, children, loader }) => (
   <>
-    {props.isError && <div>Something went wrong ...</div>}
-    {props.isLoading ? <div>Loading ...</div> : props.data && props.children}
+    {isError && <div>Something went wrong ...</div>}
+    {isLoading
+      ? (loader && loader()) || <div>Loading ...</div>
+      : data && children}
   </>
 );
 
 ConditionalRender.propTypes = {
   isError: PropTypes.bool.isRequired,
   isLoading: PropTypes.bool.isRequired,
-  data: PropTypes.object.isRequired,
+  loader: PropTypes.func.isRequired,
+  data: PropTypes.any,
   children: PropTypes.element.isRequired
 };
 

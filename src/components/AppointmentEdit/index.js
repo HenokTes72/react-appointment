@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { Formik } from 'formik';
@@ -14,6 +14,7 @@ import Input from '../Input';
 import { StyledButton } from '../Button';
 
 import useUpdateAppointment from '../../hooks/updateAppointment';
+import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 const ContentWrapper = styled.div`
   padding-left: 50px;
@@ -86,7 +87,6 @@ const appointmentEditSchema = Yup.object().shape({
 });
 
 const AppointmentEdit = ({
-  setEditModalVisiblity,
   updateDetailView,
   data: {
     consulta,
@@ -101,11 +101,12 @@ const AppointmentEdit = ({
   }
 }) => {
   const { setNewUpdatedData } = useUpdateAppointment();
+  const { setEditModalVisibility } = useContext(ModalVisibilityContext);
   return (
     <Wrapper>
       <HeaderWrapper>
         <Icon
-          onClick={() => setEditModalVisiblity(false)}
+          onClick={() => setEditModalVisibility(false)}
           style={{ fontSize: '20px', cursor: 'pointer' }}
           type="left"
         />
@@ -126,7 +127,7 @@ const AppointmentEdit = ({
         onSubmit={values => {
           setNewUpdatedData(values);
           updateDetailView(values);
-          setEditModalVisiblity(false);
+          setEditModalVisibility(false);
         }}
         validationSchema={appointmentEditSchema}
       >
@@ -227,7 +228,7 @@ const AppointmentEdit = ({
                   <FooterWrapper>
                     <StyledButton
                       htmlType="submit"
-                      onSubmit={() => setEditModalVisiblity(false)}
+                      onSubmit={() => setEditModalVisibility(false)}
                     >
                       ACTUALIZAR
                     </StyledButton>
@@ -243,7 +244,6 @@ const AppointmentEdit = ({
 };
 
 AppointmentEdit.propTypes = {
-  setEditModalVisiblity: PropTypes.func.isRequired,
   data: PropTypes.object.isRequired,
   updateDetailView: PropTypes.func.isRequired
 };

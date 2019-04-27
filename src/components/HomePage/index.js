@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 import { Modal } from 'antd';
 import PropTypes from 'prop-types';
@@ -20,6 +20,10 @@ import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfession
 import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
 
 import getDayAppointments from '../../utils/getDayAppointment';
+import DeleteAppointmentContext from '../../contexts/deleteContext';
+import ModalVisibilityContext from '../../contexts/visibilityContext';
+
+import ConditionalRender from '../../utils/conditionalRender';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -40,7 +44,8 @@ const HomePage = ({ isMobileScreen }) => {
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
-    filterSchedules
+    filterSchedules,
+    addToSchedules
   } = useFetchAppointmentsByMonth();
 
   const {
@@ -60,61 +65,64 @@ const HomePage = ({ isMobileScreen }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [oneDayAppointments, setOneDayAppointments] = useState([]);
 
-  const [showEditModal, setEditModalVisibility] = useState(false);
-  const [showCreateModal, setCreateModalVisibility] = useState(false);
-  const [showEventModal, setEventModalVisibility] = useState(false);
+  const {
+    showEditModal,
+    showCreateModal,
+    showEventModal,
+    setCreateModalVisibility,
+    setEventModalVisibility
+  } = useContext(ModalVisibilityContext);
 
   return (
     <>
       <HomeWrapper>
         <CalendarWrapper isMobileScreen={isMobileScreen}>
-          {isFetchByMonthError && <div>Something went wrong ...</div>}
-          {isFetchByMonthLoading ? (
-            <LoadingIndicator />
-          ) : (
-            schedules && (
-              <Calendar
-                schedules={schedules}
-                setSelectedMonth={setSelectedMonth}
-                daySelected={date => {
-                  setSelectedDate(date);
-                  const appointments = getDayAppointments({
-                    schedules,
-                    doctores,
-                    date
-                  });
-                  setOneDayAppointments(appointments);
-                }}
-                initialMonth={selectedMonth}
-              />
-            )
-          )}
+          <ConditionalRender
+            isLoading={isFetchByMonthLoading}
+            isError={isFetchByMonthError}
+            loader={() => <LoadingIndicator />}
+            data={schedules}
+          >
+            <Calendar
+              schedules={schedules}
+              setSelectedMonth={setSelectedMonth}
+              daySelected={date => {
+                setSelectedDate(date);
+                const appointments = getDayAppointments({
+                  schedules,
+                  doctores,
+                  date
+                });
+                setOneDayAppointments(appointments);
+              }}
+              initialMonth={selectedMonth}
+            />
+          </ConditionalRender>
 
-          {isBasicsError && <div>Something went wrong ...</div>}
-          {isBasicsLoading ? (
-            <div>Loading ...</div>
-          ) : (
-            doctores && (
-              <Professionals
-                professionals={doctores}
-                filterOneMonthAppointments={doctorIds => {
-                  filterSchedules(doctorIds);
-                }}
-                filterOneDayAppointments={doctorIds => {
-                  const appointments = getDayAppointments({
-                    schedules: schedulesCache,
-                    doctores,
-                    date: selectedDate
-                  });
-                  const filteredAppointments = appointments.filter(
-                    appointment =>
-                      doctorIds.indexOf(appointment.doctor_id) !== -1
-                  );
-                  setOneDayAppointments(filteredAppointments);
-                }}
-              />
-            )
-          )}
+          <ConditionalRender
+            isLoading={isBasicsLoading}
+            isError={isBasicsError}
+            loader={() => <LoadingIndicator />}
+            data={doctores}
+          >
+            <Professionals
+              professionals={doctores}
+              filterOneMonthAppointments={doctorIds => {
+                filterSchedules(doctorIds);
+              }}
+              filterOneDayAppointments={doctorIds => {
+                const appointments = getDayAppointments({
+                  schedules: schedulesCache,
+                  doctores,
+                  date: selectedDate
+                });
+                const filteredAppointments = appointments.filter(
+                  appointment => doctorIds.indexOf(appointment.doctor_id) !== -1
+                );
+                setOneDayAppointments(filteredAppointments);
+              }}
+            />
+          </ConditionalRender>
         </CalendarWrapper>
 
         <AppointmentWrapper>
@@ -147,18 +155,23 @@ const HomePage = ({ isMobileScreen }) => {
           (showEditModal ? (
             <AppointmentEdit
               data={appointmentData}
-              setEditModalVisiblity={setEditModalVisibility}
               updateDetailView={updateAppointmentData}
             />
           ) : (
-            <AppointmentDetail
-              data={appointmentData}
-              setEditModalVisiblity={setEditModalVisibility}
-              setEventModalVisibility={setEventModalVisibility}
-            />
+            <DeleteAppointmentContext.Provider
+              value={() => {
+                const filteredAppointments = oneDayAppointments.filter(
+                  appointment => appointment.slot_id !== appointmentData.slot_id
+                );
+                setOneDayAppointments(filteredAppointments);
+              }}
+            >
+              <AppointmentDetail data={appointmentData} />
+            </DeleteAppointmentContext.Provider>
           ))
         )}
       </Modal>
+
       <Modal
         width={800}
         visible={showCreateModal}
@@ -173,11 +186,11 @@ const HomePage = ({ isMobileScreen }) => {
         ) : (
           doctores && (
             <AppointmentCreate
+              addAppointmentToState={appointment => addToSchedules(appointment)}
               specialists={doctores}
               branches={clinicas}
               durations={aMinutes}
               times={aTime}
-              setCreateModalVisibility={setCreateModalVisibility}
             />
           )
         )}

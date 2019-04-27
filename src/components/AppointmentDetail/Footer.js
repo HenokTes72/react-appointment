@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
-import PropTypes from 'prop-types';
 
 import { StyledButton } from '../Button';
 import useCancelAppointment from '../../hooks/cancelAppointment';
+import DeleteAppointmentContext from '../../contexts/deleteContext';
+import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 const Wrapper = styled.div`
   display: flex;
@@ -11,12 +12,12 @@ const Wrapper = styled.div`
   margin-bottom: 10px;
 `;
 
-const Footer = ({
-  setEditModalVisiblity,
-  setEventModalVisibility,
-  deleteAppointmentFromState
-}) => {
+const Footer = () => {
   const { cancel, setCancel } = useCancelAppointment();
+  const deleteAppointmentFromState = useContext(DeleteAppointmentContext);
+  const { setEventModalVisibility, setEditModalVisibility } = useContext(
+    ModalVisibilityContext
+  );
   const cancelAppointment = () => {
     setCancel(!cancel);
     // eslint-disable-next-line no-alert
@@ -28,18 +29,12 @@ const Footer = ({
   };
   return (
     <Wrapper>
-      <StyledButton onClick={() => setEditModalVisiblity(true)}>
+      <StyledButton onClick={() => setEditModalVisibility(true)}>
         EDITAR
       </StyledButton>
       <StyledButton onClick={cancelAppointment}>CANCLEAR</StyledButton>
     </Wrapper>
   );
-};
-
-Footer.propTypes = {
-  deleteAppointmentFromState: PropTypes.func.isRequired,
-  setEditModalVisiblity: PropTypes.func.isRequired,
-  setEventModalVisibility: PropTypes.func.isRequired
 };
 
 export default Footer;
