@@ -1,4 +1,5 @@
 import moment from 'moment';
+import addDuration from './addDuration';
 
 const getTimeFormatForBigCalendar = (date, time) => {
   const twentyFour = moment(time, 'h:mm:ss A')
@@ -46,9 +47,7 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
       end: new Date(
         getTimeFormatForBigCalendar(
           moment().format('YYYY-MM-DD'),
-          appointment.fin ||
-            `${parseInt(appointment.inicio[0], 10) +
-              2}${appointment.inicio.slice(1, appointment.inicio.length - 1)}`
+          appointment.fin || addDuration(appointment.inicio, '1 hora')
         )
       ),
       title: `Dr. ${getProfessionalName(appointment.doctor_id)}`,

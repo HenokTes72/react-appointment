@@ -25,6 +25,8 @@ import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
 import useAppointmentCreate from '../../hooks/createAppointment';
 import ModalVisibilityContext from '../../contexts/visibilityContext';
 
+import addDuration from '../../utils/addDuration';
+
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -149,9 +151,10 @@ const AppointmentCreate = ({
   };
 
   const dataForCache = values => {
-    const { place, date, startTime, subject } = values.appointment;
+    const { place, date, startTime, duration, subject } = values.appointment;
     const { firstName, lastName, phone } = values.patient;
     return {
+      id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
       consulta: subject,
       place,
       phone,
@@ -159,7 +162,7 @@ const AppointmentCreate = ({
       patient: `${firstName} ${lastName}`,
       professional: values.specialist,
       start: startTime,
-      end: null,
+      end: addDuration(startTime, duration),
       detail: subject
     };
   };

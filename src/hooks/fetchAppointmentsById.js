@@ -57,17 +57,12 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        // eslint-disable-next-line no-console
-        console.log('ID AND NAME:', JSON.stringify(idAndName));
         const { id, name } = idAndName;
         const { cachedAppointments } = state;
-        // eslint-disable-next-line no-console
-        console.log('CACHE LENGTH:', cachedAppointments.length);
-        const cachedAppointment = [...cachedAppointments].find(
+        const cache = [...cachedAppointments];
+        const cachedAppointment = cache.find(
           appointment => parseInt(id, 10) === parseInt(appointment.id, 10)
         );
-        // eslint-disable-next-line no-console
-        console.log('CACHED HORARIOS:', JSON.stringify(cachedAppointment));
         let data;
         if (cachedAppointment) {
           data = cachedAppointment;
@@ -94,8 +89,6 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
           });
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log('SOME ERROR CACHING:', JSON.stringify(error));
         if (!didCancel) {
           dispatch({ type: 'FETCH_FAILURE' });
         }
