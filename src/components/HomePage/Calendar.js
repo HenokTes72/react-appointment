@@ -31,8 +31,11 @@ const Calendar = ({
   initialMonth,
   setSelectedMonth
 }) => {
+  // eslint-disable-next-line no-console
+  console.log('CALENDAR RENDERING');
   const appointmentDates = schedules.map(schedule => schedule.slot_date);
-
+  // eslint-disable-next-line no-console
+  console.log('APPOINTMENT DATES: ', JSON.stringify(appointmentDates));
   const handleDayClick = day => {
     daySelected(moment(day).format('YYYY-MM-DD'));
   };

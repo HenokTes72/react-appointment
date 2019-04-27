@@ -28,6 +28,14 @@ const dataFetchReducer = (state, action) => {
         ...state,
         appointmentData: action.payload
       };
+    case 'ADD_TO_CACHE': {
+      const { cachedAppointments } = state;
+      const { payload: appointment } = action;
+      return {
+        ...state,
+        cachedAppointments: [...cachedAppointments, appointment]
+      };
+    }
     default:
       throw new Error();
   }
@@ -37,7 +45,8 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isAppointmentLoading: false,
     isAppointmentError: false,
-    appointmentData: initialData
+    appointmentData: initialData,
+    cachedAppointments: []
   });
 
   const [idAndName, setIdAndName] = useState({});
@@ -48,20 +57,36 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        const result = await getAppointmentById({ ...idAndName, secret });
-        const { user } = result.data;
-        const userData = user[0];
-        const data = {
-          patient: userData.name,
-          consulta: userData.tipoConsulta,
-          place: userData.clinica,
-          phone: userData.telefono,
-          professional: idAndName.name,
-          detail: userData.detalle,
-          date: userData.slot_date,
-          start: userData.inicio,
-          end: userData.fin || ''
-        };
+        // eslint-disable-next-line no-console
+        console.log('ID AND NAME:', JSON.stringify(idAndName));
+        const { id, name } = idAndName;
+        const { cachedAppointments } = state;
+        // eslint-disable-next-line no-console
+        console.log('CACHE LENGTH:', cachedAppointments.length);
+        const cachedAppointment = [...cachedAppointments].find(
+          appointment => parseInt(id, 10) === parseInt(appointment.id, 10)
+        );
+        // eslint-disable-next-line no-console
+        console.log('CACHED HORARIOS:', JSON.stringify(cachedAppointment));
+        let data;
+        if (cachedAppointment) {
+          data = cachedAppointment;
+        } else {
+          const result = await getAppointmentById({ ...idAndName, secret });
+          const { user } = result.data;
+          const userData = user[0];
+          data = {
+            patient: userData.name,
+            consulta: userData.tipoConsulta,
+            place: userData.clinica,
+            phone: userData.telefono,
+            professional: name,
+            detail: userData.detalle,
+            date: userData.slot_date,
+            start: userData.inicio,
+            end: userData.fin || ''
+          };
+        }
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',
@@ -69,6 +94,8 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
           });
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log('SOME ERROR CACHING:', JSON.stringify(error));
         if (!didCancel) {
           dispatch({ type: 'FETCH_FAILURE' });
         }
@@ -86,6 +113,15 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
     dispatch({ type: 'UPDATE_APPOINTMENT', payload: newData });
   };
 
-  return { ...state, setIdAndName, updateAppointmentData };
+  const addToAppointmentCache = appointment => {
+    dispatch({ type: 'ADD_TO_CACHE', payload: appointment });
+  };
+
+  return {
+    ...state,
+    setIdAndName,
+    updateAppointmentData,
+    addToAppointmentCache
+  };
 };
 export default useFetchAppointmentById;

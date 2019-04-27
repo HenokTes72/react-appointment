@@ -43,11 +43,22 @@ const dataFetchReducer = (state, action) => {
         ...state,
         schedules: schedulesSelector(state, action)
       };
-    case 'ADD_SCHEDULE':
+    case 'ADD_SCHEDULE': {
+      // eslint-disable-next-line no-console
+      console.log('PAYLOAD: ', JSON.stringify(action.payload));
+      const { schedules } = state;
+      // eslint-disable-next-line no-console
+      console.log('LENGTH BEFORE ADD: ', schedules.length);
+      const newSchedules = [...schedules, action.payload];
+      // eslint-disable-next-line no-console
+      console.log('LENGTH after ADD: ', newSchedules.length);
+
       return {
         ...state,
-        schedules: [...state.schedules, action.payload]
+        schedules: newSchedules
       };
+    }
+
     default:
       throw new Error();
   }

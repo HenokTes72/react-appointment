@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Checkbox, Input, Select, Form } from 'antd';
 import styled, { css } from 'styled-components';
 import PropTypes from 'prop-types';
@@ -121,13 +121,19 @@ const AppointmentCreate = ({
   branches,
   durations,
   times,
-  addAppointmentToState
+  addToSchedules,
+  addToAppointmentCache,
+  scheduleIds
 }) => {
   const { emails, setQuery } = useFetchEmails();
   const { namedUsersData, setName } = useFetchNames();
   const { setEmailAndCallback } = useFetchUserByEmail();
   const { setNewAppointmentData } = useAppointmentCreate();
   const { setCreateModalVisibility } = useContext(ModalVisibilityContext);
+
+  const [selectedSpecialist, setSelectedSpecialist] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedClinica, setSelectedClinica] = useState(null);
 
   const setSubmit = actions => success => {
     if (success) {
@@ -142,19 +148,34 @@ const AppointmentCreate = ({
     }
   };
 
-  const getDataToAdd = values => {
+  const dataForCache = values => {
     const { place, date, startTime, subject } = values.appointment;
     const { firstName, lastName, phone } = values.patient;
     return {
       consulta: subject,
       place,
       phone,
-      date,
+      date: moment(date).format('YYYY-MM-DD'),
       patient: `${firstName} ${lastName}`,
       professional: values.specialist,
       start: startTime,
       end: null,
       detail: subject
+    };
+  };
+
+  const dataForSchedules = ({ place, date, start, end }) => {
+    return {
+      id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
+      slot_date: date,
+      inicio: start,
+      fin: end,
+      slot_status: 1,
+      user_id: selectedPatient.id,
+      doctor_id: selectedSpecialist.user_id,
+      idRe: 150971,
+      clinica: place,
+      clinicaId: selectedClinica.id
     };
   };
 
@@ -179,7 +200,10 @@ const AppointmentCreate = ({
             data: values,
             submitter: setSubmit(actions)
           });
-          addAppointmentToState(getDataToAdd(values));
+          const dataToCache = dataForCache(values);
+          const dataToSchedules = dataForSchedules(dataToCache);
+          addToAppointmentCache(dataToCache);
+          addToSchedules(dataToSchedules);
         }}
         validationSchema={createAppointmentSchema}
       >
@@ -196,10 +220,11 @@ const AppointmentCreate = ({
             setFieldValue('patient.email', email);
           };
           const handleNameSelect = id => {
-            const selectedPatient = namedUsersData.find(
+            const patient = namedUsersData.find(
               usr => usr.id === parseInt(id, 10)
             );
-            populatePatientFields(selectedPatient);
+            populatePatientFields(patient);
+            setSelectedPatient(patient);
           };
           const getNameDataSource = () =>
             namedUsersData.map(({ id, nombre, apellido }) => (
@@ -215,15 +240,14 @@ const AppointmentCreate = ({
                   id="specialist"
                   value={values.specialist}
                   onChange={doctorId => {
-                    const selectedSpecialist = specialists.find(
-                      specialist => specialist.user_id === doctorId
+                    const specialist = specialists.find(
+                      doctor => doctor.user_id === doctorId
                     );
                     setFieldValue(
                       'specialist',
-                      `${selectedSpecialist.first_name} ${
-                        selectedSpecialist.last_name
-                      }`
+                      `${specialist.first_name} ${specialist.last_name}`
                     );
+                    setSelectedSpecialist(specialist);
                   }}
                 >
                   {specialists.map((specialist, index) => (
@@ -262,8 +286,10 @@ const AppointmentCreate = ({
                             onSelect={email => {
                               setEmailAndCallback({
                                 email,
-                                callback: patient =>
-                                  populatePatientFields(patient)
+                                callback: patient => {
+                                  populatePatientFields(patient);
+                                  setSelectedPatient(patient);
+                                }
                               });
                             }}
                             dataSource={emails}
@@ -360,6 +386,7 @@ const AppointmentCreate = ({
                             clinic => clinic.id === branchId
                           );
                           setFieldValue('appointment.place', clinica.nombre);
+                          setSelectedClinica(clinica);
                         }}
                       >
                         {branches.map((clinica, index) => (
@@ -454,7 +481,10 @@ AppointmentCreate.propTypes = {
   branches: PropTypes.array.isRequired,
   durations: PropTypes.array.isRequired,
   times: PropTypes.array.isRequired,
-  addAppointmentToState: PropTypes.func.isRequired
+  addToSchedules: PropTypes.func.isRequired,
+  addToAppointmentCache: PropTypes.func.isRequired,
+
+  scheduleIds: PropTypes.array.isRequired
 };
 
 export default withMobile(AppointmentCreate);

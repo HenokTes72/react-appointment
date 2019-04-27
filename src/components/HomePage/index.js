@@ -59,7 +59,8 @@ const HomePage = ({ isMobileScreen }) => {
     isAppointmentError,
     appointmentData,
     setIdAndName,
-    updateAppointmentData
+    updateAppointmentData,
+    addToAppointmentCache
   } = useFetchAppointmentById();
 
   const [selectedDate, setSelectedDate] = useState(null);
@@ -186,11 +187,13 @@ const HomePage = ({ isMobileScreen }) => {
         ) : (
           doctores && (
             <AppointmentCreate
-              addAppointmentToState={appointment => addToSchedules(appointment)}
+              addToAppointmentCache={addToAppointmentCache}
+              addToSchedules={addToSchedules}
               specialists={doctores}
               branches={clinicas}
               durations={aMinutes}
               times={aTime}
+              scheduleIds={schedules.map(schedule => schedule.id)}
             />
           )
         )}

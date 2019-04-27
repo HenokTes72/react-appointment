@@ -58,6 +58,7 @@ const useFetchUserByEmail = (initialData = []) => {
             const getAttr = attr =>
               (user && user[attr]) || (paciente && paciente[attr]);
             callback({
+              id: getAttr('id'),
               nombre: getAttr('first_name'),
               apellido: getAttr('last_name'),
               telefono: getAttr('telefono'),

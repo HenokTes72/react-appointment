@@ -13,6 +13,8 @@ const getTimeFormatForBigCalendar = (date, time) => {
 
 // more of a convenience method for filtering only one day appointments
 const getDayAppointments = ({ schedules, doctores, date }) => {
+  // eslint-disable-next-line no-console
+  console.log('SCHEDULES LEN IN GET DAY APPS: ', schedules.length);
   if (schedules) {
     const dateMatches = schedules.filter(
       appointment => appointment.slot_date === date
