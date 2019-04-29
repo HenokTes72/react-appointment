@@ -33,7 +33,7 @@ const DayView = ({ setEventModalVisiblity, schedules, setIdAndName }) => {
 
   const onEventSelect = event => {
     setEventModalVisiblity(true);
-    setIdAndName({ id: event.id, name: event.title });
+    setIdAndName({ id: event.id, name: event.specialist });
   };
 
   return (

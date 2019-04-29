@@ -10,14 +10,16 @@ import {
   mockAppointmentCreate,
   mockAppointmentUpdate,
   mockAppointmentCancel,
-  mockPatientByName
+  mockPatientByName,
+  mockUserById,
+  mockAvailabilityById
 } from './mock';
 
 const LOCAL_END_POINT = 'http://localhost:3000/api/v1/appointment';
 const DEV_REMOTE_END_POINT = 'http://test1.saludvitale.com';
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 const IS_REMOTE = true;
-const USE_MOCK = false;
+const USE_MOCK = true;
 const USE_PROXY = true;
 
 const isRemote = remote => (remote === undefined ? IS_REMOTE : remote);
@@ -144,7 +146,29 @@ const urlPatientByName = ({ name, remote = true }) =>
 export const getUserByName = mockedWith({
   urlGenerator: urlPatientByName,
   mocker: mockPatientByName,
-  useMock: false
+  useMock: true
+});
+
+const urlUserById = ({ id, remote = true }) =>
+  isRemote(remote)
+    ? completeRemoteUrl(`/buscarpaciente?paciente=${id}`)
+    : completeLocalUrl(`/user/${id}`);
+
+export const getUserById = mockedWith({
+  urlGenerator: urlUserById,
+  mocker: mockUserById,
+  useMock: true
+});
+
+const urlAvailabilityById = ({ doctorId, start, end, remote = true }) =>
+  isRemote(remote)
+    ? completeRemoteUrl(`/citas/availability=${start}/${end}/${doctorId}`)
+    : completeLocalUrl(`/availability/${start}/${end}`);
+
+export const getAvailabilityById = mockedWith({
+  urlGenerator: urlAvailabilityById,
+  mocker: mockAvailabilityById,
+  useMock: true
 });
 
 export default { IS_REMOTE, USE_MOCK, USE_PROXY };

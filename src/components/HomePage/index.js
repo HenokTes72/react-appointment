@@ -45,7 +45,8 @@ const HomePage = ({ isMobileScreen }) => {
     setSelectedMonth,
     setProfessionalIds,
     filterSchedules,
-    addToSchedules
+    addToSchedules,
+    updateSchedule
   } = useFetchAppointmentsByMonth();
 
   const {
@@ -156,7 +157,13 @@ const HomePage = ({ isMobileScreen }) => {
           (showEditModal ? (
             <AppointmentEdit
               data={appointmentData}
-              updateDetailView={updateAppointmentData}
+              updateAppointmentCache={updateAppointmentData}
+              updateScheduleCache={updateSchedule}
+              specialists={doctores}
+              branches={clinicas}
+              durations={aMinutes}
+              times={aTime}
+              scheduleIds={schedules.map(schedule => schedule.id)}
             />
           ) : (
             <DeleteAppointmentContext.Provider

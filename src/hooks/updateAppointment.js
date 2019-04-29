@@ -23,11 +23,14 @@ const dataFetchReducer = (state, action) => {
         isUpdateResponseLoading: false,
         isUpdateResponseError: true
       };
-    case 'UPDATE_DATA':
+    case 'SET_SUBMITTER_AND_DATA': {
+      const { submitter, data } = action.payload;
       return {
         ...state,
-        newUpdatedData: action.payload
+        setSubmitting: submitter,
+        newUpdatedData: data
       };
+    }
     default:
       throw new Error();
   }
@@ -38,7 +41,8 @@ const useUpdateAppointment = (initialData = {}) => {
     isUpdateResponseLoading: false,
     isUpdateResponseError: false,
     updateResponse: initialData,
-    newUpdatedData: {}
+    newUpdatedData: {},
+    setSubmitting: null
   });
 
   useEffect(() => {
@@ -47,9 +51,10 @@ const useUpdateAppointment = (initialData = {}) => {
     const updateData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        if (state.newUpdatedData) {
+        const { newUpdatedData: data, setSubmitting } = state;
+
+        if (data) {
           const bodyFormData = new FormData();
-          const { newUpdatedData: data } = state;
           Object.keys(data).forEach(key => {
             bodyFormData.set(key, data[key]);
           });
@@ -58,6 +63,14 @@ const useUpdateAppointment = (initialData = {}) => {
             updateResponse: bodyFormData,
             config: { headers: { 'Content-Type': 'multipart/form-data' } }
           });
+          if (setSubmitting !== null && result.success) {
+            // eslint-disable-next-line no-console
+            console.log(
+              'SET SUBMITTING CALLED IN UPDATE: ',
+              typeof setSubmitting
+            );
+            setSubmitting(true, 'hello');
+          }
           if (!didCancel) {
             dispatch({
               type: 'FETCH_SUCCESS',
@@ -79,10 +92,9 @@ const useUpdateAppointment = (initialData = {}) => {
     };
   }, [state.newUpdatedData]);
 
-  const setNewUpdatedData = data => {
-    dispatch({ type: 'UPDATE_DATA', payload: data });
+  const setUpdatedAppointmentData = dataAndSubmitter => {
+    dispatch({ type: 'SET_SUBMITTER_AND_DATA', payload: dataAndSubmitter });
   };
-
-  return { ...state, setNewUpdatedData };
+  return { ...state, setUpdatedAppointmentData };
 };
 export default useUpdateAppointment;

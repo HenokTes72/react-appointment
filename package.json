@@ -13,6 +13,7 @@
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
+    "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.5",
@@ -32,7 +33,6 @@
     "eslint-plugin-react": "^7.12.4",
     "file-loader": "^3.0.1",
     "jest-cli": "^24.7.1",
-    "jest-styled-components": "^6.3.1",
     "prettier": "^1.16.4",
     "react-hot-loader": "^4.8.3",
     "style-loader": "^0.23.1",
@@ -44,7 +44,6 @@
   "dependencies": {
     "antd": "^3.16.2",
     "axios": "^0.18.0",
-    "connected-react-router": "^6.3.2",
     "formik": "^1.5.2",
     "immutable": "^4.0.0-rc.12",
     "moment": "^2.24.0",

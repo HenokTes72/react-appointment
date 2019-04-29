@@ -15,6 +15,11 @@ const schedulesSelector = (state, action) => {
   return filteredSchedules;
 };
 
+const getUpdatedList = (arr, item) => {
+  const filteredArray = arr.filter(element => element.id !== item.id);
+  return [...filteredArray, item];
+};
+
 const dataFetchReducer = (state, action) => {
   const { type, payload } = action;
   switch (type) {
@@ -43,21 +48,23 @@ const dataFetchReducer = (state, action) => {
         ...state,
         schedules: schedulesSelector(state, action)
       };
-    case 'ADD_SCHEDULE': {
-      // eslint-disable-next-line no-console
-      console.log('PAYLOAD: ', JSON.stringify(action.payload));
-      const { schedules } = state;
-      // eslint-disable-next-line no-console
-      console.log('LENGTH BEFORE ADD: ', schedules.length);
-      const newSchedules = [...schedules, action.payload];
-      // eslint-disable-next-line no-console
-      console.log('LENGTH after ADD: ', newSchedules.length);
-
+    case 'ADD_SCHEDULE':
       return {
         ...state,
-        schedules: newSchedules
+        schedules: [...state.schedules, action.payload],
+        schedulesCache: [...state.schedulesCache, action.payload],
+        activeSchedulesCache: [...state.activeSchedulesCache, action.payload]
       };
-    }
+    case 'UPDATE_SCHEDULE':
+      return {
+        ...state,
+        schedules: getUpdatedList(state.schedules, action.payload),
+        schedulesCache: getUpdatedList(state.schedulesCache, action.payload),
+        activeSchedulesCache: getUpdatedList(
+          state.activeSchedulesCache,
+          action.payload
+        )
+      };
 
     default:
       throw new Error();
@@ -69,11 +76,16 @@ const useFetchAppointmentsByMonth = (
   institutionId = 187,
   token = 1555334482919
 ) => {
+  // The difference between schedules, schedulesCache, and activeSchedulesCache
+  // schedules: this holds monthly schedules that might be fitlred by professional ids
+  // schedulesCache: this holds monthly schedules that are unfiltered by professional ids
+  // activeSchedulesCache: holds only schedules created in during the current frontend session
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isFetchByMonthLoading: false,
     isFetchByMonthError: false,
     schedules: initialData,
-    schedulesCache: initialData
+    schedulesCache: initialData,
+    activeSchedulesCache: []
   });
 
   const [selectedMonth, setSelectedMonth] = useState(
@@ -113,10 +125,31 @@ const useFetchAppointmentsByMonth = (
             schedules = schedules.concat([...horarios]);
           }
         });
+        // update with active schedules if not fetched along
+        const { activeSchedulesCache } = state;
+        const schedulesToAppend = [];
+        activeSchedulesCache.forEach(activeSchedule => {
+          const found = schedules.find(
+            schedule => schedule.id === activeSchedule.id
+          );
+          if (!found) {
+            schedulesToAppend.push(activeSchedule);
+          }
+        });
+        if (schedulesToAppend.length > 0) {
+          schedules = [...schedules, ...schedulesToAppend];
+        }
+        const finalSchedules = [];
+        schedules.forEach(async schedule => {
+          // const patientResult = await getUserById({ id: schedule.user_id });
+          // const { nombre, apellido } = patientResult.data;
+          // const patient = `${nombre} ${apellido}`;
+          finalSchedules.push({ ...schedule, patient: 'Enrique Eglasias' });
+        });
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',
-            payload: schedules
+            payload: finalSchedules
           });
         }
       } catch (error) {
@@ -138,9 +171,13 @@ const useFetchAppointmentsByMonth = (
   };
 
   const addToSchedules = schedule => {
-    // eslint-disable-next-line no-console
-    console.log('ADD TO SCHEDULES CALLED');
     dispatch({ type: 'ADD_SCHEDULE', payload: schedule });
+  };
+
+  const updateSchedule = schedule => {
+    // eslint-disable-next-line no-console
+    console.log('UPDATE SCHEDULE CALLED');
+    dispatch({ type: 'UPDATE_SCHEDULE', payload: schedule });
   };
   return {
     ...state,
@@ -148,7 +185,8 @@ const useFetchAppointmentsByMonth = (
     setSelectedMonth,
     setProfessionalIds,
     filterSchedules,
-    addToSchedules
+    addToSchedules,
+    updateSchedule
   };
 };
 export default useFetchAppointmentsByMonth;

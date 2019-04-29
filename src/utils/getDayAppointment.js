@@ -1,5 +1,7 @@
+// @flow
 import moment from 'moment';
 import addDuration from './addDuration';
+import type { ISchedule } from '../types/schedule';
 
 const getTimeFormatForBigCalendar = (date, time) => {
   const twentyFour = moment(time, 'h:mm:ss A')
@@ -12,8 +14,56 @@ const getTimeFormatForBigCalendar = (date, time) => {
   ).year()} ${twentyFour}`;
 };
 
+const getEndTime = (endTime, startTime) => {
+  if (!endTime || endTime === '') {
+    return addDuration(startTime, '1 hora');
+  }
+  return endTime;
+};
+
+type TitleArgs = {|
+  duration: string,
+  specialist: string,
+  patient: string
+|};
+
+type IHorarios = {|
+  allDay: boolean,
+  start: Date,
+  id: number | string,
+  end: Date,
+  title: string,
+  bgColor: string,
+  doctor_id: number | string,
+  specialist: string
+|};
+
+const getTitle = ({ duration, specialist, patient }: TitleArgs) => {
+  let durationInMinutes;
+  const durationString = duration === undefined ? '1 hora' : duration;
+  if (durationString.indexOf('hora') !== -1) {
+    durationInMinutes = parseInt(durationString, 10) * 60;
+  } else {
+    durationInMinutes = parseInt(durationString, 10);
+  }
+  // eslint-disable-next-line no-console
+  console.log(`DURATION IN MINUTES: ${durationInMinutes}`);
+  if (durationInMinutes < 60) {
+    return '';
+  }
+  return `Dr. ${specialist}, Patiente ${patient}`;
+};
+
 // more of a convenience method for filtering only one day appointments
-const getDayAppointments = ({ schedules, doctores, date }) => {
+const getDayAppointments = ({
+  schedules,
+  doctores,
+  date
+}: {
+  schedules: Array<ISchedule>,
+  doctores: Array<Object>,
+  date: string | Date
+}) => {
   // eslint-disable-next-line no-console
   console.log('SCHEDULES LEN IN GET DAY APPS: ', schedules.length);
   if (schedules) {
@@ -32,10 +82,12 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
       }
     });
     const getProfessionalName = id => {
-      const professional = [...doctores].find(prof => prof.user_id === id);
+      const professional: Object = [...doctores].find(
+        prof => prof.user_id === id
+      );
       return `${professional.first_name} ${professional.last_name}`;
     };
-    const horarios = filteredMatches.map(appointment => ({
+    const horarios: Array<IHorarios> = filteredMatches.map(appointment => ({
       allDay: false,
       start: new Date(
         getTimeFormatForBigCalendar(
@@ -47,10 +99,15 @@ const getDayAppointments = ({ schedules, doctores, date }) => {
       end: new Date(
         getTimeFormatForBigCalendar(
           moment().format('YYYY-MM-DD'),
-          appointment.fin || addDuration(appointment.inicio, '1 hora')
+          getEndTime(appointment.fin, appointment.inicio)
         )
       ),
-      title: `Dr. ${getProfessionalName(appointment.doctor_id)}`,
+      title: getTitle({
+        duration: appointment.duration,
+        specialist: getProfessionalName(appointment.doctor_id),
+        patient: appointment.patient
+      }),
+      specialist: getProfessionalName(appointment.doctor_id),
       bgColor: 'red',
       doctor_id: appointment.doctor_id
     }));

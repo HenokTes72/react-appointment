@@ -1,6 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Checkbox, Input, Select, Form } from 'antd';
-import styled, { css } from 'styled-components';
+import { Input, Select, Form } from 'antd';
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -11,13 +10,10 @@ import StyledDatePicker from '../DatePicker';
 import Error from '../Error';
 import CustomSelect from './CustomSelect';
 import withMobile from '../../utils/withMobile';
-import H2 from '../H2';
 import Span from '../Span';
 import FormItem from './FormItem';
 import FormInline from './FormInline';
-import MyInput from '../Input';
 import Footer from './Footer';
-import { StyledButton } from '../Button';
 
 import useFetchEmails from '../../hooks/fetchEmails';
 import useFetchNames from '../../hooks/fetchNames';
@@ -27,76 +23,21 @@ import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 import addDuration from '../../utils/addDuration';
 
+import {
+  Wrapper,
+  StyledH2,
+  SizeStyledH2,
+  WidthStyledButton,
+  StyledInput,
+  StyledCheck,
+  FormGroupLeft,
+  FormGroupRight,
+  FormWrapper,
+  FormDetail
+} from './style';
+
 const { Option } = Select;
 const { TextArea } = Input;
-
-const Wrapper = styled.div`
-  margin-top: 10px;
-  padding-left: ${props => (props.isMobileScreen ? '0px' : '25px')};
-  padding-right: ${props => (props.isMobileScreen ? '0px' : '25px')};
-  display: flex;
-  flex-direction: column;
-`;
-
-const StyledH2 = styled(H2)`
-  text-align: center;
-  font-weight: bold;
-`;
-
-const SizeStyledH2 = styled(StyledH2)`
-  font-size: 16px;
-  text-align: start;
-  margin-bottom: 15px;
-`;
-
-const FormDetail = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex: ${props => (props.isMobileScreen ? '1' : '0.5')};
-  flex-direction: column;
-  min-width: 150px;
-`;
-
-const FormWrapper = styled.div`
-  display: flex;
-  margin-bottom: 20px;
-  ${props =>
-    props.isMobileScreen &&
-    css`
-      width: 100%;
-      flex-wrap: wrap;
-    `}
-`;
-
-const FormGroupLeft = styled(FormGroup)`
-  margin-right: ${props => (props.isMobileScreen ? '5px' : '10px')};
-`;
-
-const FormGroupRight = styled(FormGroup)`
-  margin-left: ${props => (props.isMobileScreen ? '5px' : '10px')};
-`;
-
-const StyledCheck = styled(Checkbox)`
-  margin-left: ${props => (props.isMobileScreen ? '0px' : '10px')};
-`;
-
-const StyledInput = styled(MyInput)`
-  flex-grow: 1;
-  margin-bottom: 5px;
-`;
-
-const WidthStyledButton = styled(StyledButton)`
-  width: 250px;
-`;
-
-// const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*
-// )| ([0 - 9]{ 2, 4 })[\\-] *)*? [0 - 9]{ 3, 4 }?[\\-] * [0 - 9]{ 3, 4 }?$ /;
 
 const createAppointmentSchema = Yup.object().shape({
   specialist: Yup.string().required('Required'),
@@ -113,7 +54,7 @@ const createAppointmentSchema = Yup.object().shape({
     date: Yup.date().required('Required'),
     startTime: Yup.string().required('Required'),
     duration: Yup.string().required('Required'),
-    subject: Yup.string().required('Required')
+    detail: Yup.string().required('Required')
   })
 });
 
@@ -137,7 +78,7 @@ const AppointmentCreate = ({
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [selectedClinica, setSelectedClinica] = useState(null);
 
-  const setSubmit = actions => success => {
+  const setSubmit = actions => (success, message) => {
     if (success) {
       // eslint-disable-next-line no-alert
       alert('Your appointment is recorded, but is waiting for a working API');
@@ -145,38 +86,20 @@ const AppointmentCreate = ({
       setCreateModalVisibility(false);
     } else {
       // eslint-disable-next-line no-alert
-      alert('Error creating an appointment');
+      alert(`Error creating an appointment ${message || ''}`);
       setCreateModalVisibility(true);
     }
   };
 
-  const dataForCache = values => {
-    const { place, date, startTime, duration, subject } = values.appointment;
-    const { firstName, lastName, phone } = values.patient;
+  const dataForSchedules = ({ id, place, date, start, end }) => {
     return {
-      id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
-      consulta: subject,
-      place,
-      phone,
-      date: moment(date).format('YYYY-MM-DD'),
-      patient: `${firstName} ${lastName}`,
-      professional: values.specialist,
-      start: startTime,
-      end: addDuration(startTime, duration),
-      detail: subject
-    };
-  };
-
-  const dataForSchedules = ({ place, date, start, end }) => {
-    return {
-      id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
+      id,
       slot_date: date,
       inicio: start,
       fin: end,
       slot_status: 1,
       user_id: selectedPatient.id,
       doctor_id: selectedSpecialist.user_id,
-      idRe: 150971,
       clinica: place,
       clinicaId: selectedClinica.id
     };
@@ -184,28 +107,54 @@ const AppointmentCreate = ({
 
   return (
     <Wrapper isMobileScreen={isMobileScreen}>
-      <StyledH2>CRER CITA</StyledH2>
+      <StyledH2>CREAR CITA</StyledH2>
       <Formik
         initialValues={{
+          id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
           specialist: '',
           patient: { email: '', firstName: '', lastName: '', phone: '' },
           appointment: {
             place: '',
             date: moment(Date.now()),
             startTime: '',
+            endTime: '',
             duration: '30 minutos',
-            subject: ''
+            detail: '',
+            consulta: ''
           },
           emailCheck: false
         }}
         onSubmit={(values, actions) => {
+          // eslint-disable-next-line no-console
+          console.log('ON SUBMIT CALLED');
+          const { id, specialist, patient, appointment } = values;
+          const updatedValues = {
+            id,
+            specialist,
+            patient: { ...patient },
+            appointment: {
+              ...appointment,
+              date: appointment.date.format('YYYY-MM-DD'),
+              endTime: addDuration(appointment.startTime, appointment.duration)
+            }
+          };
+          // eslint-disable-next-line no-console
+          console.log('UPDATED VALUES:', JSON.stringify(updatedValues));
           setNewAppointmentData({
-            data: values,
+            data: updatedValues,
             submitter: setSubmit(actions)
           });
-          const dataToCache = dataForCache(values);
-          const dataToSchedules = dataForSchedules(dataToCache);
-          addToAppointmentCache(dataToCache);
+          const {
+            appointment: { startTime, endTime, date, place }
+          } = updatedValues;
+          const dataToSchedules = dataForSchedules({
+            id: updatedValues.id,
+            place,
+            date,
+            start: startTime,
+            end: endTime
+          });
+          addToAppointmentCache(updatedValues);
           addToSchedules(dataToSchedules);
         }}
         validationSchema={createAppointmentSchema}
@@ -219,7 +168,7 @@ const AppointmentCreate = ({
           }) => {
             setFieldValue('patient.lastName', apellido);
             setFieldValue('patient.firstName', nombre);
-            setFieldValue('patient.phone', telefono);
+            setFieldValue('patient.phone', `${telefono}`);
             setFieldValue('patient.email', email);
           };
           const handleNameSelect = id => {
@@ -439,7 +388,9 @@ const AppointmentCreate = ({
                       <CustomSelect
                         id="appointment.duration"
                         value={values.appointment.duration}
-                        onChange={e => setFieldValue('appointment.duration', e)}
+                        onChange={e => {
+                          setFieldValue('appointment.duration', e);
+                        }}
                       >
                         {durations.map((name, index) => (
                           <Option key={index} value={name}>
@@ -457,14 +408,14 @@ const AppointmentCreate = ({
               <FormItem>
                 <Span>Asunto de la cita</Span>
                 <TextArea
-                  id="appointment.subject"
-                  value={values.appointment.subject}
+                  id="appointment.detail"
+                  value={values.appointment.detail}
                   onChange={handleChange}
                   placeholder="Ingrese informacion adicional de la cita"
                   rows={4}
                 />
-                {errors.appointment && errors.appointment.subject && (
-                  <Error>{errors.appointment.subject}</Error>
+                {errors.appointment && errors.appointment.detail && (
+                  <Error>{errors.appointment.detail}</Error>
                 )}
               </FormItem>
               <Footer>

@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
 
-import { doAppointmentCreate } from '../config';
+import { doAppointmentCreate, getAvailabilityById } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -52,25 +52,31 @@ const useCreateAppointment = (initialData = {}) => {
       dispatch({ type: 'FETCH_INIT' });
       try {
         const { newAppointmentData, setSubmitting } = state;
-        const bodyFormData = new FormData();
-        Object.keys(newAppointmentData).forEach(name => {
-          bodyFormData.set(name, newAppointmentData[name]);
+        const availabilityQuery = await getAvailabilityById({
+          id: newAppointmentData.doctorId
         });
-        const result = await doAppointmentCreate({
-          method: 'post',
-          postData: bodyFormData,
-          config: { headers: { 'Content-Type': 'multipart/form-data' } }
-        });
-        if (setSubmitting !== null && result.success) {
-          // eslint-disable-next-line no-console
-          console.log('SET SUBMITTING CALLED');
-          setSubmitting(true);
-        }
-        if (!didCancel) {
-          dispatch({
-            type: 'FETCH_SUCCESS',
-            payload: result
+        const { available } = availabilityQuery.data;
+        if (available) {
+          const bodyFormData = new FormData();
+          Object.keys(newAppointmentData).forEach(name => {
+            bodyFormData.set(name, newAppointmentData[name]);
           });
+          const result = await doAppointmentCreate({
+            method: 'post',
+            postData: bodyFormData,
+            config: { headers: { 'Content-Type': 'multipart/form-data' } }
+          });
+          if (setSubmitting !== null && result.success) {
+            setSubmitting(true);
+          }
+          if (!didCancel) {
+            dispatch({
+              type: 'FETCH_SUCCESS',
+              payload: result
+            });
+          }
+        } else {
+          setSubmitting(false, 'Slot is already booked');
         }
       } catch (error) {
         if (!didCancel) {

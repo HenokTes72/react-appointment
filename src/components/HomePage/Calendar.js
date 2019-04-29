@@ -53,6 +53,8 @@ const Calendar = ({
     return match === undefined;
   };
 
+  // eslint-disable-next-line no-console
+  console.log(`SCHEDULES COMING IN: ${schedules.length}`);
   return (
     <Wrapper>
       <div>

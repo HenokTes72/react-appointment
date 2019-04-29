@@ -5,7 +5,8 @@ const addDuration = (start, duration) => {
   const durationString = isNaN(parseInt(duration, 10))
     ? '60 minutos'
     : duration;
-  const addHours = durationString.indexOf('hora') !== -1;
+  const addHours =
+    durationString.indexOf('hora') !== -1 || durationString.indexOf('hour');
   return moment(start, 'hh:mm A')
     .add(parseInt(durationString, 10), addHours ? 'hours' : 'minutes')
     .format('hh:mm A');

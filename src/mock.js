@@ -867,6 +867,25 @@ const mockPatientByName = ({ name = null }) => {
   };
 };
 
+const mockUserById = () => {
+  return {
+    data: {
+      nombre: 'Estafanos',
+      apellido: 'Eglasias'
+    },
+    success: true
+  };
+};
+
+const mockAvailabilityById = () => {
+  return {
+    data: {
+      available: true
+    },
+    success: true
+  };
+};
+
 module.exports = {
   mockAllAppointment,
   mockBasicInfo,
@@ -877,5 +896,7 @@ module.exports = {
   mockAppointmentCreate,
   mockAppointmentUpdate,
   mockAppointmentCancel,
-  mockPatientByName
+  mockPatientByName,
+  mockUserById,
+  mockAvailabilityById
 };
