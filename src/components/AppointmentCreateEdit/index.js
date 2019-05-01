@@ -1,31 +1,35 @@
-import React, { useContext, useState } from 'react';
+// @flow
+import React, { useContext } from 'react';
 import { Input, Select, Form, Icon } from 'antd';
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
-import * as Yup from 'yup';
 import moment from 'moment';
 
+import AppointmentSchema from './schema';
 import AutoComplete from '../AutoComplete';
 import StyledDatePicker from '../DatePicker';
 import Error from '../Error';
-import CustomSelect from '../AppointmentCreate/CustomSelect';
+import CustomSelect from './CustomSelect';
 import withMobile from '../../utils/withMobile';
 import Span from '../Span';
-import FormItem from '../AppointmentCreate/FormItem';
-import FormInline from '../AppointmentCreate/FormInline';
-import Footer from '../AppointmentCreate/Footer';
+import FormItem from './FormItem';
+import FormInline from './FormInline';
+import Footer from './Footer';
 
 import useFetchEmails from '../../hooks/fetchEmails';
 import useFetchNames from '../../hooks/fetchNames';
 import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
-import useUpdateAppointment from '../../hooks/updateAppointment';
+import useAppointmentCreate from '../../hooks/createAppointment';
 import ModalVisibilityContext from '../../contexts/visibilityContext';
+
+import type { IAppointment } from '../../types/appointmentDetailed';
+import type { ICompactAppointment } from '../../types/appointmentCompact';
+
 import addDuration from '../../utils/addDuration';
 
 import {
   Wrapper,
-  CenteredH2,
-  HeaderWrapper,
+  StyledH2,
   SizeStyledH2,
   WidthStyledButton,
   StyledInput,
@@ -33,125 +37,166 @@ import {
   FormGroupLeft,
   FormGroupRight,
   FormWrapper,
-  FormDetail
+  FormDetail,
+  HeaderWrapper,
+  CenteredH2
 } from './style';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-const createAppointmentSchema = Yup.object().shape({
-  specialist: Yup.string().required('Required'),
-  patient: Yup.object().shape({
-    email: Yup.string()
-      .email('Invalid email')
-      .required('Required'),
-    firstName: Yup.string().required('Required'),
-    lastName: Yup.string().required('Required'),
-    phone: Yup.string().required('Required')
-  }),
-  appointment: Yup.object().shape({
-    place: Yup.string().required('Required'),
-    date: Yup.date().required('Required'),
-    startTime: Yup.string().required('Required'),
-    duration: Yup.string().required('Required'),
-    detail: Yup.string().required('Required')
-  })
-});
-
-const AppointmentEdit = ({
+const AppointmentCreateEdit = ({
   isMobileScreen,
   specialists,
   branches,
   durations,
   times,
+  addToSchedules,
+  addToAppointmentCache,
+  scheduleIds,
+  isCreate,
   updateAppointmentCache,
   updateScheduleCache,
-  data: {
-    specialist: incomingSpecialist,
-    id: incomingId,
-    appointment: incomingAppointment,
-    patient: incomingPatient
-  }
+  data
 }) => {
   const { emails, setQuery } = useFetchEmails();
   const { namedUsersData, setName } = useFetchNames();
   const { setEmailAndCallback } = useFetchUserByEmail();
-  const { setEditModalVisibility } = useContext(ModalVisibilityContext);
+  const { setNewAppointmentData } = useAppointmentCreate();
+  const { setCreateModalVisibility, setEditModalVisibility } = useContext(
+    ModalVisibilityContext
+  );
 
-  const [selectedSpecialist, setSelectedSpecialist] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [selectedClinica, setSelectedClinica] = useState(null);
-
-  const { setUpdatedAppointmentData } = useUpdateAppointment();
-
-  const dataForSchedules = ({ id, place, date, start, end }) => {
+  const dataForSchedules = ({
+    id,
+    place,
+    date,
+    start,
+    end,
+    patient,
+    patientId,
+    doctorId,
+    clinicaId
+  }): ICompactAppointment => {
     return {
       id,
       slot_date: date,
+      patient,
       inicio: start,
       fin: end,
+      duration: '',
       slot_status: 1,
-      user_id: selectedPatient && selectedPatient.id,
-      doctor_id: selectedSpecialist && selectedSpecialist.user_id,
+      user_id: patientId,
+      doctor_id: doctorId,
       clinica: place,
-      clinicaId: selectedClinica && selectedClinica.id
+      clinicaId
     };
   };
 
   const setSubmit = (actions, values) => (success, message) => {
     if (success) {
-      // eslint-disable-next-line no-console
-      console.log('SET SUBMITT RUNNING CALLBACK:', JSON.stringify(values));
-
       const {
-        appointment: { startTime, endTime, date, place }
+        specialist: { id: doctorId },
+        patient: { id: patientId, firstName, lastName },
+        appointment: {
+          startTime,
+          endTime,
+          date,
+          place: { id: clinicaId, name: clinica }
+        }
       } = values;
-      // eslint-disable-next-line no-console
-      console.log('DATA TO SCHEDULES CALLING');
       const dataToSchedules = dataForSchedules({
         id: values.id,
-        place,
+        patient: `${firstName} ${lastName}`,
+        place: clinica,
         date,
         start: startTime,
-        end: endTime
+        end: endTime,
+        doctorId,
+        patientId,
+        clinicaId
       });
-      // eslint-disable-next-line no-console
-      console.log('UPDATEING CAHCED AND SCHEDULE');
-      updateAppointmentCache(values);
-      updateScheduleCache(dataToSchedules);
-      // eslint-disable-next-line no-alert
-      alert('The appointment is updated, but is waiting for a working API');
-      actions.setSubmitting(success);
-      setEditModalVisibility(false);
-    } else {
+      if (isCreate) {
+        addToAppointmentCache(values);
+        addToSchedules(dataToSchedules);
+        // eslint-disable-next-line no-alert
+        alert('Your appointment is recorded, but is waiting for a working API');
+        actions.setSubmitting(success);
+        setCreateModalVisibility(false);
+      } else {
+        updateAppointmentCache(values);
+        updateScheduleCache(dataToSchedules);
+        // eslint-disable-next-line no-alert
+        alert('The appointment is updated, but is waiting for a working API');
+        actions.setSubmitting(success);
+        setEditModalVisibility(false);
+      }
+    } else if (isCreate) {
       // eslint-disable-next-line no-alert
       alert(`Error creating an appointment ${message || ''}`);
+      setCreateModalVisibility(true);
+    } else {
+      // eslint-disable-next-line no-alert
+      alert(`Error updating an appointment ${message || ''}`);
       setEditModalVisibility(true);
     }
   };
 
+  const defaultCreateAppointment: IAppointment = {
+    // $FlowFixMe
+    id: Array.sort(scheduleIds)[scheduleIds.length - 1] + 1,
+    specialist: { id: '', name: '' },
+    patient: { id: '', email: '', firstName: '', lastName: '', phone: '' },
+    appointment: {
+      place: { id: '', name: '' },
+      date: moment(Date.now()),
+      startTime: '',
+      endTime: '',
+      duration: '30 minutos',
+      detail: 'Prueba',
+      consulta: 'Presencial'
+    },
+    emailCheck: false
+  };
+
+  const defaultEditAppointment = (): IAppointment => {
+    const {
+      specialist: incomingSpecialist,
+      id: incomingId,
+      appointment: incomingAppointment,
+      patient: incomingPatient
+    } = data;
+
+    return {
+      id: incomingId,
+      specialist: incomingSpecialist,
+      patient: { ...incomingPatient },
+      appointment: {
+        ...incomingAppointment,
+        date: moment(incomingAppointment.date, 'YYYY-MM-DD')
+      },
+      emailCheck: false
+    };
+  };
   return (
     <Wrapper isMobileScreen={isMobileScreen}>
-      <HeaderWrapper>
-        <Icon
-          onClick={() => setEditModalVisibility(false)}
-          style={{ fontSize: '20px', cursor: 'pointer' }}
-          type="left"
-        />
-        <CenteredH2>EDIT CITA</CenteredH2>
-      </HeaderWrapper>
+      {isCreate ? (
+        <StyledH2>CREAR CITA</StyledH2>
+      ) : (
+        <HeaderWrapper>
+          <Icon
+            onClick={() => setEditModalVisibility(false)}
+            style={{ fontSize: '20px', cursor: 'pointer' }}
+            type="left"
+          />
+          <CenteredH2>EDIT CITA</CenteredH2>
+        </HeaderWrapper>
+      )}
 
       <Formik
-        initialValues={{
-          id: incomingId,
-          specialist: incomingSpecialist,
-          patient: { ...incomingPatient },
-          appointment: {
-            ...incomingAppointment,
-            date: moment(incomingAppointment.date, 'YYYY-MM-DD')
-          },
-          emailCheck: false
-        }}
+        initialValues={
+          isCreate ? defaultCreateAppointment : defaultEditAppointment()
+        }
         onSubmit={(values, actions) => {
           // eslint-disable-next-line no-console
           console.log('ON SUBMIT CALLED');
@@ -168,35 +213,36 @@ const AppointmentEdit = ({
           };
           // eslint-disable-next-line no-console
           console.log('UPDATED VALUES:', JSON.stringify(updatedValues));
-          setUpdatedAppointmentData({
+          setNewAppointmentData({
             data: updatedValues,
             submitter: setSubmit(actions, updatedValues)
           });
         }}
-        validationSchema={createAppointmentSchema}
+        validationSchema={AppointmentSchema}
       >
         {({ values, errors, handleChange, handleSubmit, setFieldValue }) => {
           const populatePatientFields = ({
+            id,
             nombre,
             apellido,
             telefono,
             email
           }) => {
+            setFieldValue('patient.id', id);
             setFieldValue('patient.lastName', apellido);
             setFieldValue('patient.firstName', nombre);
-            setFieldValue('patient.phone', telefono);
+            setFieldValue('patient.phone', `${telefono}`);
             setFieldValue('patient.email', email);
           };
-          const handleNameSelect = userId => {
+          const handleNameSelect = id => {
             const patient = namedUsersData.find(
-              usr => usr.id === parseInt(userId, 10)
+              usr => usr.id === parseInt(id, 10)
             );
             populatePatientFields(patient);
-            setSelectedPatient(patient);
           };
           const getNameDataSource = () =>
-            namedUsersData.map(({ id: userId, nombre, apellido }) => (
-              <AutoComplete.Option key={userId} name={`${nombre} ${apellido}`}>
+            namedUsersData.map(({ id, nombre, apellido }) => (
+              <AutoComplete.Option key={id} name={`${nombre} ${apellido}`}>
                 {`${nombre} ${apellido}`}
               </AutoComplete.Option>
             ));
@@ -205,17 +251,17 @@ const AppointmentEdit = ({
               <FormItem>
                 <Span>Seleccione un Especialista</Span>
                 <CustomSelect
-                  id="specialist"
-                  value={values.specialist}
+                  id="specialist.name"
+                  value={values.specialist.name}
                   onChange={doctorId => {
                     const specialist = specialists.find(
                       doctor => doctor.user_id === doctorId
                     );
                     setFieldValue(
-                      'specialist',
+                      'specialist.name',
                       `${specialist.first_name} ${specialist.last_name}`
                     );
-                    setSelectedSpecialist(specialist);
+                    setFieldValue('specialist.id', doctorId);
                   }}
                 >
                   {specialists.map((specialist, index) => (
@@ -224,7 +270,9 @@ const AppointmentEdit = ({
                     </Option>
                   ))}
                 </CustomSelect>
-                {errors.specialist && <Error>{errors.specialist}</Error>}
+                {errors.specialist && errors.specialist.name && (
+                  <Error>{errors.specialist.name}</Error>
+                )}
               </FormItem>
               <SizeStyledH2>Introduzca datos del paciente</SizeStyledH2>
               <FormDetail>
@@ -256,7 +304,6 @@ const AppointmentEdit = ({
                                 email,
                                 callback: patient => {
                                   populatePatientFields(patient);
-                                  setSelectedPatient(patient);
                                 }
                               });
                             }}
@@ -347,14 +394,17 @@ const AppointmentEdit = ({
                     <FormItem>
                       <Span>Seleccione un lugar</Span>
                       <CustomSelect
-                        id="appointment.place"
-                        value={values.appointment.place}
+                        id="appointment.place.name"
+                        value={values.appointment.place.name}
                         onChange={branchId => {
                           const clinica = branches.find(
                             clinic => clinic.id === branchId
                           );
-                          setFieldValue('appointment.place', clinica.nombre);
-                          setSelectedClinica(clinica);
+                          setFieldValue(
+                            'appointment.place.name',
+                            clinica.nombre
+                          );
+                          setFieldValue('appointment.place.id', branchId);
                         }}
                       >
                         {branches.map((clinica, index) => (
@@ -363,9 +413,11 @@ const AppointmentEdit = ({
                           </Option>
                         ))}
                       </CustomSelect>
-                      {errors.appointment && errors.appointment.place && (
-                        <Error>{errors.appointment.place}</Error>
-                      )}
+                      {errors.appointment &&
+                        errors.appointment.place &&
+                        errors.appointment.place.name && (
+                          <Error>{errors.appointment.place.name}</Error>
+                        )}
                     </FormItem>
                     <FormItem>
                       <Span>Hora de Inicio</Span>
@@ -404,7 +456,9 @@ const AppointmentEdit = ({
                       <CustomSelect
                         id="appointment.duration"
                         value={values.appointment.duration}
-                        onChange={e => setFieldValue('appointment.duration', e)}
+                        onChange={e => {
+                          setFieldValue('appointment.duration', e);
+                        }}
                       >
                         {durations.map((name, index) => (
                           <Option key={index} value={name}>
@@ -443,15 +497,19 @@ const AppointmentEdit = ({
   );
 };
 
-AppointmentEdit.propTypes = {
+AppointmentCreateEdit.propTypes = {
   isMobileScreen: PropTypes.bool.isRequired,
   specialists: PropTypes.array.isRequired,
   branches: PropTypes.array.isRequired,
   durations: PropTypes.array.isRequired,
   times: PropTypes.array.isRequired,
-  updateScheduleCache: PropTypes.func.isRequired,
-  updateAppointmentCache: PropTypes.func.isRequired,
-  data: PropTypes.object.isRequired
+  addToSchedules: PropTypes.func,
+  addToAppointmentCache: PropTypes.func,
+  scheduleIds: PropTypes.array.isRequired,
+  isCreate: PropTypes.bool.isRequired,
+  updateScheduleCache: PropTypes.func,
+  updateAppointmentCache: PropTypes.func,
+  data: PropTypes.object
 };
 
-export default withMobile(AppointmentEdit);
+export default withMobile(AppointmentCreateEdit);

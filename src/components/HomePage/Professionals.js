@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { Checkbox } from 'antd';
 import PropTypes from 'prop-types';
 import Paragraph from '../P';
+import ColorContext from '../../contexts/colorContext';
 
 const Wrapper = styled.div`
   display: flex;
@@ -29,12 +30,7 @@ const CustomCheckbox = styled(Checkbox)`
     `}
 `;
 
-const Professionals = ({
-  professionals,
-  filterOneMonthAppointments,
-  filterOneDayAppointments
-}) => {
-  const colors = ['brown', 'purple', 'pink', 'red', 'yellow'];
+const Professionals = ({ professionals, onProfessionalsChange }) => {
   const [doctorsCheckBook, setDoctorsCheckBook] = useState(() => {
     const checkBook = {};
     professionals.forEach(professional => {
@@ -42,6 +38,7 @@ const Professionals = ({
     });
     return checkBook;
   });
+  const { getColor } = useContext(ColorContext);
   return (
     <Wrapper>
       <P>Profesionales</P>
@@ -50,7 +47,7 @@ const Professionals = ({
           key={index}
           value={professional.user_id}
           checked={doctorsCheckBook[professional.user_id]}
-          backgroundColor={colors[index % colors.length]}
+          backgroundColor={getColor(professional.user_id)}
           onChange={e => {
             const { value, checked } = e.target;
             const checkBook = { ...doctorsCheckBook };
@@ -59,8 +56,7 @@ const Professionals = ({
               id => checkBook[id]
             );
             selectedDoctorIds = selectedDoctorIds.map(id => parseInt(id, 10));
-            filterOneDayAppointments(selectedDoctorIds);
-            filterOneMonthAppointments(selectedDoctorIds);
+            onProfessionalsChange(selectedDoctorIds);
             setDoctorsCheckBook(checkBook);
           }}
         >
@@ -73,8 +69,7 @@ const Professionals = ({
 
 Professionals.propTypes = {
   professionals: PropTypes.array,
-  filterOneMonthAppointments: PropTypes.func.isRequired,
-  filterOneDayAppointments: PropTypes.func.isRequired
+  onProfessionalsChange: PropTypes.func.isRequired
 };
 
 export default Professionals;

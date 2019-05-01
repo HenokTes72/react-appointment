@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react';
 
-import { doAppointmentUpdate } from '../config';
+import { doAppointmentUpdate, getAvailabilityById } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -52,31 +52,41 @@ const useUpdateAppointment = (initialData = {}) => {
       dispatch({ type: 'FETCH_INIT' });
       try {
         const { newUpdatedData: data, setSubmitting } = state;
-
-        if (data) {
-          const bodyFormData = new FormData();
-          Object.keys(data).forEach(key => {
-            bodyFormData.set(key, data[key]);
-          });
-          const result = await doAppointmentUpdate({
-            method: 'put',
-            updateResponse: bodyFormData,
-            config: { headers: { 'Content-Type': 'multipart/form-data' } }
-          });
-          if (setSubmitting !== null && result.success) {
-            // eslint-disable-next-line no-console
-            console.log(
-              'SET SUBMITTING CALLED IN UPDATE: ',
-              typeof setSubmitting
-            );
-            setSubmitting(true, 'hello');
-          }
-          if (!didCancel) {
-            dispatch({
-              type: 'FETCH_SUCCESS',
-              payload: result.data
+        const availabilityQuery = await getAvailabilityById({
+          doctorId: data.doctorId,
+          start: data.startTime,
+          end: data.endTime,
+          date: data.date
+        });
+        const { success } = availabilityQuery.data;
+        if (success) {
+          if (data) {
+            const bodyFormData = new FormData();
+            Object.keys(data).forEach(key => {
+              bodyFormData.set(key, data[key]);
             });
+            const result = await doAppointmentUpdate({
+              method: 'put',
+              updateResponse: bodyFormData,
+              config: { headers: { 'Content-Type': 'multipart/form-data' } }
+            });
+            if (setSubmitting !== null && result.success) {
+              // eslint-disable-next-line no-console
+              console.log(
+                'SET SUBMITTING CALLED IN UPDATE: ',
+                typeof setSubmitting
+              );
+              setSubmitting(true, 'hello');
+            }
+            if (!didCancel) {
+              dispatch({
+                type: 'FETCH_SUCCESS',
+                payload: result.data
+              });
+            }
           }
+        } else {
+          setSubmitting(false, 'Slot is already booked');
         }
       } catch (error) {
         if (!didCancel) {

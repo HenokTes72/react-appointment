@@ -1,5 +1,5 @@
 // @flow
-export type ISchedule = {|
+export type ICompactAppointment = {|
   id: number | string,
   doctor_id: number | string,
   patient: string,

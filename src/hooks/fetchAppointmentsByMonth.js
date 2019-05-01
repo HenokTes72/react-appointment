@@ -65,7 +65,19 @@ const dataFetchReducer = (state, action) => {
           action.payload
         )
       };
-
+    case 'DELETE_SCHEDULE':
+      return {
+        ...state,
+        schedules: state.schedules.filter(
+          schedule => schedule.slot_id !== action.payload
+        ),
+        schedulesCache: state.schedulesCache.filter(
+          schedule => schedule.slot_id !== action.payload
+        ),
+        activeSchedulesCache: state.activeSchedulesCache.filter(
+          schedule => schedule.slot_id !== action.payload
+        )
+      };
     default:
       throw new Error();
   }
@@ -175,10 +187,15 @@ const useFetchAppointmentsByMonth = (
   };
 
   const updateSchedule = schedule => {
-    // eslint-disable-next-line no-console
-    console.log('UPDATE SCHEDULE CALLED');
     dispatch({ type: 'UPDATE_SCHEDULE', payload: schedule });
   };
+
+  const deleteSchedule = slotId => {
+    // eslint-disable-next-line no-console
+    console.log('DELETE SCHEDULE CALLED');
+    dispatch({ type: 'DELETE_SCHEDULE', payload: slotId });
+  };
+
   return {
     ...state,
     selectedMonth,
@@ -186,7 +203,8 @@ const useFetchAppointmentsByMonth = (
     setProfessionalIds,
     filterSchedules,
     addToSchedules,
-    updateSchedule
+    updateSchedule,
+    deleteSchedule
   };
 };
 export default useFetchAppointmentsByMonth;

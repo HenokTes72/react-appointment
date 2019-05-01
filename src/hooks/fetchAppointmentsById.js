@@ -1,8 +1,10 @@
+// @flow
 import { useState, useEffect, useReducer } from 'react';
 
 import { getAppointmentById } from '../config';
 
 import getDuration from '../utils/getDuration';
+import type { IAppointment } from '../types/appointmentDetailed';
 
 const getAttr = (object1, object2, attr) => {
   return (object1 && object1[attr]) || (object2 && object2[attr]);
@@ -35,11 +37,6 @@ const dataFetchReducer = (state, action) => {
       const filteredAppointments = cachedAppointments.filter(
         appointment => appointment.id !== updatedAppointment.id
       );
-      // eslint-disable-next-line no-console
-      console.log(
-        'UPDATE APPOINTMENT CALLED: FILTERED LENG:',
-        filteredAppointments.length
-      );
       return {
         ...state,
         appointmentData: action.payload,
@@ -59,15 +56,32 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
-  const [state, dispatch] = useReducer(dataFetchReducer, {
+const useFetchAppointmentById = (
+  initialData: IAppointment = {},
+  secret: number | string = 1555334482919
+) => {
+  const [
+    state: {
+      isAppointmentLoading: boolean,
+      isAppointmentError: boolean,
+      appointmentData: IAppointment,
+      cachedAppointments: Array<IAppointment>
+    },
+    dispatch
+  ] = useReducer(dataFetchReducer, {
     isAppointmentLoading: false,
     isAppointmentError: false,
     appointmentData: initialData,
     cachedAppointments: []
   });
-
-  const [idAndName, setIdAndName] = useState({});
+  const [
+    idAndName: {
+      id: string | number,
+      name: string
+    },
+    setIdAndName
+    // $FlowFixMe
+  ] = useState({});
 
   useEffect(() => {
     let didCancel = false;
@@ -75,19 +89,15 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
     const fetchData = async () => {
       dispatch({ type: 'FETCH_INIT' });
       try {
-        const { id, name: specialist } = idAndName;
+        const { id, name: specialistName } = idAndName;
         const { cachedAppointments: cache } = state;
         const cachedAppointment = cache.find(
           appointment => parseInt(id, 10) === parseInt(appointment.id, 10)
         );
-        let data;
+        let data: IAppointment;
         if (cachedAppointment) {
-          // eslint-disable-next-line no-console
-          console.log('CACHED DATA SET AS DETAIL APPOINTMENT');
           data = cachedAppointment;
         } else {
-          // eslint-disable-next-line no-console
-          console.log('NEW DATA SET AS DETAIL APPOINTMENT');
           const result = await getAppointmentById({ ...idAndName, secret });
           const { user: usersList, paciente: patientsList } = result.data;
           const [user] = usersList;
@@ -96,15 +106,22 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
           const endTime = getAttr(user, paciente, 'fin');
           data = {
             id: user.id,
-            specialist,
+            specialist: {
+              id: getAttr(user, paciente, 'doctorId'),
+              name: specialistName
+            },
             patient: {
+              id: getAttr(user, paciente, 'paciente_id'),
               email: getAttr(paciente, user, 'email'),
               firstName: getAttr(paciente, user, 'nombre'),
               lastName: getAttr(paciente, user, 'apellido'),
               phone: getAttr(paciente, user, 'telefono')
             },
             appointment: {
-              place: getAttr(user, paciente, 'clinica'),
+              place: {
+                id: getAttr(user, paciente, 'clinicaId'),
+                name: getAttr(user, paciente, 'clinica')
+              },
               date: getAttr(user, paciente, 'slot_date'),
               startTime,
               endTime,
@@ -135,11 +152,11 @@ const useFetchAppointmentById = (initialData = {}, secret = 1555334482919) => {
     };
   }, [idAndName]);
 
-  const updateAppointmentData = appointment => {
+  const updateAppointmentData = (appointment: IAppointment) => {
     dispatch({ type: 'UPDATE_APPOINTMENT', payload: appointment });
   };
 
-  const addToAppointmentCache = appointment => {
+  const addToAppointmentCache = (appointment: IAppointment) => {
     dispatch({ type: 'ADD_TO_CACHE', payload: appointment });
   };
 

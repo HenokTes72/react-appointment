@@ -53,10 +53,13 @@ const useCreateAppointment = (initialData = {}) => {
       try {
         const { newAppointmentData, setSubmitting } = state;
         const availabilityQuery = await getAvailabilityById({
-          id: newAppointmentData.doctorId
+          doctorId: newAppointmentData.doctorId,
+          start: newAppointmentData.startTime,
+          end: newAppointmentData.endTime,
+          date: newAppointmentData.date
         });
-        const { available } = availabilityQuery.data;
-        if (available) {
+        const { success } = availabilityQuery.data;
+        if (success) {
           const bodyFormData = new FormData();
           Object.keys(newAppointmentData).forEach(name => {
             bodyFormData.set(name, newAppointmentData[name]);

@@ -13,16 +13,14 @@ import DayView from './DayView';
 import withMobile from '../../utils/withMobile';
 import AppointmentDetail from '../AppointmentDetail';
 import MyButton from '../Button';
-import AppointmentCreate from '../AppointmentCreate';
-import AppointmentEdit from '../AppointmentEdit';
+import AppointmentCreateEdit from '../AppointmentCreateEdit';
 import useFetchAppointmentsByMonth from '../../hooks/fetchAppointmentsByMonth';
 import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfessionals';
 import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
 
-import getDayAppointments from '../../utils/getDayAppointment';
 import DeleteAppointmentContext from '../../contexts/deleteContext';
 import ModalVisibilityContext from '../../contexts/visibilityContext';
-
+import { ColorProvider } from '../../contexts/colorContext';
 import ConditionalRender from '../../utils/conditionalRender';
 
 const HomeWrapper = styled.div`
@@ -35,6 +33,24 @@ const H2 = styled(Header2)`
   margin: 0px;
 `;
 
+const filterSchedulesByDate = (schedules, date) => {
+  const dateMatches = schedules.filter(
+    appointment => appointment.slot_date === date
+  );
+  if (dateMatches === undefined) {
+    return [];
+  }
+  const addedIds = [];
+  const filteredMatches = [];
+  dateMatches.forEach(match => {
+    if (addedIds.indexOf(match.id) === -1) {
+      addedIds.push(match.id);
+      filteredMatches.push(match);
+    }
+  });
+  return filteredMatches;
+};
+
 const HomePage = ({ isMobileScreen }) => {
   const {
     isFetchByMonthLoading,
@@ -45,6 +61,7 @@ const HomePage = ({ isMobileScreen }) => {
     setSelectedMonth,
     setProfessionalIds,
     filterSchedules,
+    deleteSchedule,
     addToSchedules,
     updateSchedule
   } = useFetchAppointmentsByMonth();
@@ -65,7 +82,6 @@ const HomePage = ({ isMobileScreen }) => {
   } = useFetchAppointmentById();
 
   const [selectedDate, setSelectedDate] = useState(null);
-  const [oneDayAppointments, setOneDayAppointments] = useState([]);
 
   const {
     showEditModal,
@@ -90,12 +106,6 @@ const HomePage = ({ isMobileScreen }) => {
               setSelectedMonth={setSelectedMonth}
               daySelected={date => {
                 setSelectedDate(date);
-                const appointments = getDayAppointments({
-                  schedules,
-                  doctores,
-                  date
-                });
-                setOneDayAppointments(appointments);
               }}
               initialMonth={selectedMonth}
             />
@@ -107,23 +117,14 @@ const HomePage = ({ isMobileScreen }) => {
             loader={() => <LoadingIndicator />}
             data={doctores}
           >
-            <Professionals
-              professionals={doctores}
-              filterOneMonthAppointments={doctorIds => {
-                filterSchedules(doctorIds);
-              }}
-              filterOneDayAppointments={doctorIds => {
-                const appointments = getDayAppointments({
-                  schedules: schedulesCache,
-                  doctores,
-                  date: selectedDate
-                });
-                const filteredAppointments = appointments.filter(
-                  appointment => doctorIds.indexOf(appointment.doctor_id) !== -1
-                );
-                setOneDayAppointments(filteredAppointments);
-              }}
-            />
+            <ColorProvider>
+              <Professionals
+                professionals={doctores}
+                onProfessionalsChange={doctorIds => {
+                  filterSchedules(doctorIds);
+                }}
+              />
+            </ColorProvider>
           </ConditionalRender>
         </CalendarWrapper>
 
@@ -134,11 +135,16 @@ const HomePage = ({ isMobileScreen }) => {
               CREAR CITA
             </MyButton>
           </AppointmentHeader>
-          <DayView
-            setEventModalVisiblity={setEventModalVisibility}
-            schedules={oneDayAppointments}
-            setIdAndName={setIdAndName}
-          />
+          <ColorProvider>
+            <DayView
+              setEventModalVisiblity={setEventModalVisibility}
+              dailySchedules={(appointments => {
+                return filterSchedulesByDate(appointments, selectedDate);
+              })(schedulesCache)}
+              doctores={doctores}
+              setIdAndName={setIdAndName}
+            />
+          </ColorProvider>
         </AppointmentWrapper>
       </HomeWrapper>
       <Modal
@@ -155,7 +161,8 @@ const HomePage = ({ isMobileScreen }) => {
         ) : (
           appointmentData &&
           (showEditModal ? (
-            <AppointmentEdit
+            <AppointmentCreateEdit
+              isCreate={false}
               data={appointmentData}
               updateAppointmentCache={updateAppointmentData}
               updateScheduleCache={updateSchedule}
@@ -168,10 +175,7 @@ const HomePage = ({ isMobileScreen }) => {
           ) : (
             <DeleteAppointmentContext.Provider
               value={() => {
-                const filteredAppointments = oneDayAppointments.filter(
-                  appointment => appointment.slot_id !== appointmentData.slot_id
-                );
-                setOneDayAppointments(filteredAppointments);
+                deleteSchedule(appointmentData.slot_id);
               }}
             >
               <AppointmentDetail data={appointmentData} />
@@ -193,7 +197,8 @@ const HomePage = ({ isMobileScreen }) => {
           <LoadingIndicator />
         ) : (
           doctores && (
-            <AppointmentCreate
+            <AppointmentCreateEdit
+              isCreate={true}
               addToAppointmentCache={addToAppointmentCache}
               addToSchedules={addToSchedules}
               specialists={doctores}

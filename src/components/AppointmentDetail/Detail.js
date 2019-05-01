@@ -17,8 +17,15 @@ import {
 const Detail = ({ isMobileScreen, slotData }) => {
   const {
     patient: { firstName, lastName, phone },
-    specialist,
-    appointment: { place, date, startTime, endTime, detail, consulta }
+    specialist: { name: specialistName },
+    appointment: {
+      place: { name: clinicaName },
+      date,
+      startTime,
+      endTime,
+      detail,
+      consulta
+    }
   } = slotData;
   return (
     <Wrapper isMobileScreen={isMobileScreen}>
@@ -29,11 +36,11 @@ const Detail = ({ isMobileScreen, slotData }) => {
         </DetailItems>
         <DetailItems>
           <PB>Especialista</PB>
-          <PP>{specialist}</PP>
+          <PP>{specialistName}</PP>
         </DetailItems>
         <DetailItems>
           <PB>Centro</PB>
-          <PP>{place}</PP>
+          <PP>{clinicaName}</PP>
         </DetailItems>
         <DetailItems>
           <PB>Consulta</PB>

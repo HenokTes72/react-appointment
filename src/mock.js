@@ -870,8 +870,19 @@ const mockPatientByName = ({ name = null }) => {
 const mockUserById = () => {
   return {
     data: {
-      nombre: 'Estafanos',
-      apellido: 'Eglasias'
+      paciente: [
+        {
+          cedula: null,
+          nombre: 'Frank',
+          segundo_nombre: null,
+          apellido: 'Catamo',
+          segundo_apellido: null,
+          telefono: 2147483647,
+          celular: null,
+          telefono_laboral: null
+        }
+      ],
+      success: true
     },
     success: true
   };
@@ -880,7 +891,7 @@ const mockUserById = () => {
 const mockAvailabilityById = () => {
   return {
     data: {
-      available: true
+      success: true
     },
     success: true
   };

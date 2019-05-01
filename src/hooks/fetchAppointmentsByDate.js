@@ -1,6 +1,8 @@
+// @flow
 import { useState, useEffect, useReducer } from 'react';
 
 import { getAppointmentByDate } from '../config';
+import type { ICompactAppointment } from '../types/appointmentCompact';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -29,10 +31,11 @@ const dataFetchReducer = (state, action) => {
 };
 
 const useFetchAppointmentsByDate = (
-  initialData = {},
-  professionalIds = ['295'],
-  institutionId = 187,
-  token = 1555334482919
+  // $FlowFixMe
+  initialData: ICompactAppointment = {},
+  professionalIds: Array<string | number> = ['295'],
+  institutionId: string | number = 187,
+  token: string | number = 1555334482919
 ) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isFetchByDateLoading: false,
@@ -40,6 +43,7 @@ const useFetchAppointmentsByDate = (
     oneDayAppointments: initialData
   });
 
+  // $FlowFixMe
   const [selectedDate, setSelectedDate] = useState('2019-04-12');
 
   useEffect(() => {
@@ -62,7 +66,7 @@ const useFetchAppointmentsByDate = (
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
         // const professionals = [];
-        let schedules = [];
+        let schedules: Array<ICompactAppointment> = [];
         results.forEach(result => {
           const { success, horarios } = result;
           if (success) {
