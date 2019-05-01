@@ -1,6 +1,6 @@
 // @flow
 import React, { useContext } from 'react';
-import { Input, Select, Form, Icon } from 'antd';
+import { Input, Select, Form, Icon, Modal } from 'antd';
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import moment from 'moment';
@@ -63,9 +63,11 @@ const AppointmentCreateEdit = ({
   const { namedUsersData, setName } = useFetchNames();
   const { setEmailAndCallback } = useFetchUserByEmail();
   const { setNewAppointmentData } = useAppointmentCreate();
-  const { setCreateModalVisibility, setEditModalVisibility } = useContext(
-    ModalVisibilityContext
-  );
+  const {
+    setCreateModalVisibility,
+    setEditModalVisibility,
+    setEventModalVisibility
+  } = useContext(ModalVisibilityContext);
 
   const dataForSchedules = ({
     id,
@@ -119,25 +121,36 @@ const AppointmentCreateEdit = ({
       if (isCreate) {
         addToAppointmentCache(values);
         addToSchedules(dataToSchedules);
-        // eslint-disable-next-line no-alert
-        alert('Your appointment is recorded, but is waiting for a working API');
+        Modal.success({
+          title: 'Successfully Booked',
+          content:
+            'Your appointment is recorded, but is waiting for a working API'
+        });
         actions.setSubmitting(success);
         setCreateModalVisibility(false);
       } else {
         updateAppointmentCache(values);
         updateScheduleCache(dataToSchedules);
-        // eslint-disable-next-line no-alert
-        alert('The appointment is updated, but is waiting for a working API');
+        Modal.success({
+          title: 'Successfully Updated',
+          content:
+            'The appointment is updated, but is waiting for a working API'
+        });
         actions.setSubmitting(success);
         setEditModalVisibility(false);
+        setEventModalVisibility(false);
       }
     } else if (isCreate) {
-      // eslint-disable-next-line no-alert
-      alert(`Error creating an appointment ${message || ''}`);
+      Modal.error({
+        title: 'Error Booking',
+        content: `Error creating an appointment ${message || ''}`
+      });
       setCreateModalVisibility(true);
     } else {
-      // eslint-disable-next-line no-alert
-      alert(`Error updating an appointment ${message || ''}`);
+      Modal.error({
+        title: 'Error Updating',
+        content: `Error updating an appointment ${message || ''}`
+      });
       setEditModalVisibility(true);
     }
   };
@@ -198,8 +211,6 @@ const AppointmentCreateEdit = ({
           isCreate ? defaultCreateAppointment : defaultEditAppointment()
         }
         onSubmit={(values, actions) => {
-          // eslint-disable-next-line no-console
-          console.log('ON SUBMIT CALLED');
           const { id, specialist, patient, appointment } = values;
           const updatedValues = {
             id,

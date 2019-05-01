@@ -23,8 +23,10 @@ const USE_MOCK = false;
 const USE_PROXY = true;
 
 const isRemote = remote => (remote === undefined ? IS_REMOTE : remote);
-const completeRemoteUrl = endPoint =>
-  `${CORS_PROXY}${DEV_REMOTE_END_POINT}${endPoint}`;
+const completeRemoteUrl = (endPoint, useProxy = USE_PROXY) =>
+  useProxy
+    ? `${CORS_PROXY}${DEV_REMOTE_END_POINT}${endPoint}`
+    : `${DEV_REMOTE_END_POINT}${endPoint}`;
 const completeLocalUrl = endPoint => `${LOCAL_END_POINT}${endPoint}`;
 
 const mockedWith = ({
@@ -33,10 +35,14 @@ const mockedWith = ({
   isNonGet = false,
   useMock = USE_MOCK
 }) => async parameters => {
-  const execApiCall = () =>
-    isNonGet
-      ? axios({ url: urlGenerator({ ...parameters }), ...parameters })
-      : axios(urlGenerator({ ...parameters }));
+  const execApiCall = () => {
+    const url = urlGenerator({ ...parameters });
+    const result = isNonGet
+      ? axios({ url, ...parameters })
+      : axios(urlGenerator({ ...parameters, withCredentials: true }));
+    return result;
+  };
+
   return useMock ? mocker({ ...parameters }) : execApiCall();
 };
 
@@ -148,15 +154,17 @@ export const getUserByName = mockedWith({
   mocker: mockPatientByName
 });
 
-const urlUserById = ({ id, remote = true }) =>
-  isRemote(remote)
-    ? completeRemoteUrl(`/buscarpaciente?paciente=${id}`)
+const urlUserById = ({ id, remote = true }) => {
+  const url = isRemote(remote)
+    ? completeRemoteUrl(`/buscarpaciente?paciente=${id}`, true)
     : completeLocalUrl(`/user/${id}`);
+  return url;
+};
 
 export const getUserById = mockedWith({
   urlGenerator: urlUserById,
   mocker: mockUserById,
-  useMock: true
+  useMock: USE_MOCK
 });
 
 const urlAvailabilityById = ({ doctorId, date, start, end, remote = true }) =>

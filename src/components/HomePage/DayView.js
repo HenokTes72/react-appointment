@@ -115,7 +115,7 @@ const DayView = ({
         border: 'white',
         color: 'white',
         opacity: 0.8,
-        display: event.isThin ? 'flex' : 'block'
+        display: event.isThin ? 'flex !important' : 'block'
       }
     };
   };

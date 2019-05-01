@@ -56,7 +56,6 @@ const HomePage = ({ isMobileScreen }) => {
     isFetchByMonthLoading,
     isFetchByMonthError,
     schedules,
-    schedulesCache,
     selectedMonth,
     setSelectedMonth,
     setProfessionalIds,
@@ -93,60 +92,60 @@ const HomePage = ({ isMobileScreen }) => {
 
   return (
     <>
-      <HomeWrapper>
-        <CalendarWrapper isMobileScreen={isMobileScreen}>
-          <ConditionalRender
-            isLoading={isFetchByMonthLoading}
-            isError={isFetchByMonthError}
-            loader={() => <LoadingIndicator />}
-            data={schedules}
-          >
-            <Calendar
-              schedules={schedules}
-              setSelectedMonth={setSelectedMonth}
-              daySelected={date => {
-                setSelectedDate(date);
-              }}
-              initialMonth={selectedMonth}
-            />
-          </ConditionalRender>
+      <ColorProvider>
+        <HomeWrapper>
+          <CalendarWrapper isMobileScreen={isMobileScreen}>
+            <ConditionalRender
+              isLoading={isFetchByMonthLoading}
+              isError={isFetchByMonthError}
+              loader={() => <LoadingIndicator />}
+              data={schedules}
+            >
+              <Calendar
+                schedules={schedules}
+                setSelectedMonth={setSelectedMonth}
+                daySelected={date => {
+                  setSelectedDate(date);
+                }}
+                initialMonth={selectedMonth}
+              />
+            </ConditionalRender>
 
-          <ConditionalRender
-            isLoading={isBasicsLoading}
-            isError={isBasicsError}
-            loader={() => <LoadingIndicator />}
-            data={doctores}
-          >
-            <ColorProvider>
+            <ConditionalRender
+              isLoading={isBasicsLoading}
+              isError={isBasicsError}
+              loader={() => <LoadingIndicator />}
+              data={doctores}
+            >
               <Professionals
                 professionals={doctores}
                 onProfessionalsChange={doctorIds => {
                   filterSchedules(doctorIds);
                 }}
               />
-            </ColorProvider>
-          </ConditionalRender>
-        </CalendarWrapper>
+            </ConditionalRender>
+          </CalendarWrapper>
 
-        <AppointmentWrapper>
-          <AppointmentHeader isMobileScreen={isMobileScreen}>
-            <H2>RESERVACIONES</H2>
-            <MyButton onClick={() => setCreateModalVisibility(true)}>
-              CREAR CITA
-            </MyButton>
-          </AppointmentHeader>
-          <ColorProvider>
+          <AppointmentWrapper>
+            <AppointmentHeader isMobileScreen={isMobileScreen}>
+              <H2>RESERVACIONES</H2>
+              <MyButton onClick={() => setCreateModalVisibility(true)}>
+                CREAR CITA
+              </MyButton>
+            </AppointmentHeader>
+
             <DayView
               setEventModalVisiblity={setEventModalVisibility}
               dailySchedules={(appointments => {
                 return filterSchedulesByDate(appointments, selectedDate);
-              })(schedulesCache)}
+              })(schedules)}
               doctores={doctores}
               setIdAndName={setIdAndName}
             />
-          </ColorProvider>
-        </AppointmentWrapper>
-      </HomeWrapper>
+          </AppointmentWrapper>
+        </HomeWrapper>
+      </ColorProvider>
+
       <Modal
         width={600}
         visible={showEventModal}
@@ -175,7 +174,7 @@ const HomePage = ({ isMobileScreen }) => {
           ) : (
             <DeleteAppointmentContext.Provider
               value={() => {
-                deleteSchedule(appointmentData.slot_id);
+                deleteSchedule(appointmentData.id);
               }}
             >
               <AppointmentDetail data={appointmentData} />
@@ -185,7 +184,7 @@ const HomePage = ({ isMobileScreen }) => {
       </Modal>
 
       <Modal
-        width={800}
+        width={700}
         visible={showCreateModal}
         destroyOnClose
         onCancel={() => setCreateModalVisibility(false)}

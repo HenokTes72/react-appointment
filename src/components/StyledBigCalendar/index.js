@@ -37,9 +37,7 @@ export default styled(BigCalendar)`
 
   .rbc-event {
     border-radius: 0px;
-    background-color: ${props => props.bgcolor};
     border: 1px solid white;
-    display: ${props => (props.isThin ? 'flex' : 'block')} !important;
   }
 
   .rbc-events-container {

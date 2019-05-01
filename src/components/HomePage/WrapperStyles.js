@@ -7,7 +7,7 @@ const Wrapper = styled.div`
 `;
 
 const CalendarWrapper = styled(Wrapper)`
-  width: 300px;
+  width: 320px;
   padding-top: 50px;
   margin: ${props => (props.isMobileScreen ? 'auto' : '')};
 `;

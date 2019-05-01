@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import styled from 'styled-components';
-
+import { Modal } from 'antd';
 import { StyledButton } from '../Button';
 import useCancelAppointment from '../../hooks/cancelAppointment';
 import DeleteAppointmentContext from '../../contexts/deleteContext';
@@ -18,21 +18,34 @@ const Footer = () => {
   const { setEventModalVisibility, setEditModalVisibility } = useContext(
     ModalVisibilityContext
   );
+
   const cancelAppointment = () => {
     setCancel(!cancel);
-    // eslint-disable-next-line no-alert
-    alert(
-      'You have successfully cancelled the appointment, waiting for a working API'
-    );
+    Modal.success({
+      title: 'Successfully Deleted',
+      content:
+        'You have successfully deleted the appointment, waiting for a working API'
+    });
     deleteAppointmentFromState();
     setEventModalVisibility(false);
+  };
+
+  const showConfirm = () => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: 'Are you sure you want to delete this appointment?',
+      onOk() {
+        cancelAppointment();
+      },
+      onCancel() {}
+    });
   };
   return (
     <Wrapper>
       <StyledButton onClick={() => setEditModalVisibility(true)}>
         EDITAR
       </StyledButton>
-      <StyledButton onClick={cancelAppointment}>CANCLEAR</StyledButton>
+      <StyledButton onClick={showConfirm}>CANCLEAR</StyledButton>
     </Wrapper>
   );
 };

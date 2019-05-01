@@ -4,7 +4,7 @@ import moment from 'moment';
 
 import getMonthDates from '../utils/getMonthDates';
 
-import { getAppointmentByDate } from '../config';
+import { getAppointmentByDate, getUserById } from '../config';
 
 const schedulesSelector = (state, action) => {
   const { schedulesCache } = state;
@@ -65,19 +65,22 @@ const dataFetchReducer = (state, action) => {
           action.payload
         )
       };
-    case 'DELETE_SCHEDULE':
+    case 'DELETE_SCHEDULE': {
+      const stringNotEqual = (a, b) => `${a}` !== `${b}`;
       return {
         ...state,
-        schedules: state.schedules.filter(
-          schedule => schedule.slot_id !== action.payload
+        schedules: state.schedules.filter(schedule =>
+          stringNotEqual(schedule.id, action.payload)
         ),
-        schedulesCache: state.schedulesCache.filter(
-          schedule => schedule.slot_id !== action.payload
+        schedulesCache: state.schedulesCache.filter(schedule =>
+          stringNotEqual(schedule.id, action.payload)
         ),
-        activeSchedulesCache: state.activeSchedulesCache.filter(
-          schedule => schedule.slot_id !== action.payload
+        activeSchedulesCache: state.activeSchedulesCache.filter(schedule =>
+          stringNotEqual(schedule.id, action.payload)
         )
       };
+    }
+
     default:
       throw new Error();
   }
@@ -126,7 +129,6 @@ const useFetchAppointmentsByMonth = (
             requests.push(request);
           });
         });
-
         const responses = await Promise.all(requests);
         const results = responses.map(resp => resp.data);
 
@@ -151,12 +153,30 @@ const useFetchAppointmentsByMonth = (
         if (schedulesToAppend.length > 0) {
           schedules = [...schedules, ...schedulesToAppend];
         }
-        const finalSchedules = [];
-        schedules.forEach(async schedule => {
-          // const patientResult = await getUserById({ id: schedule.user_id });
-          // const { nombre, apellido } = patientResult.data;
-          // const patient = `${nombre} ${apellido}`;
-          finalSchedules.push({ ...schedule, patient: 'Enrique Eglasias' });
+        // Fetch patient name
+        const userRequests = [];
+        const requestedUsers = [];
+        schedules.forEach(({ user_id: userId }) => {
+          if (requestedUsers.indexOf(userId) === -1) {
+            const userRequest = getUserById({ id: userId });
+            userRequests.push(userRequest);
+            requestedUsers.push(userId);
+          }
+        });
+        const userResponses = await Promise.all(userRequests);
+        const userResults = userResponses.map(resp => resp.data);
+        const patients = userResults.map(({ paciente }, index) => {
+          const [patient] = paciente;
+          return { ...patient, id: requestedUsers[index] };
+        });
+        // Incorporate patient name into the appointment data
+        const finalSchedules = schedules.map(schedule => {
+          const patient = patients.find(usr => usr.id === schedule.user_id);
+          if (patient === undefined) {
+            return schedule;
+          }
+          const { nombre, apellido } = patient;
+          return { ...schedule, patient: `${nombre} ${apellido}` };
         });
         if (!didCancel) {
           dispatch({
@@ -191,8 +211,6 @@ const useFetchAppointmentsByMonth = (
   };
 
   const deleteSchedule = slotId => {
-    // eslint-disable-next-line no-console
-    console.log('DELETE SCHEDULE CALLED');
     dispatch({ type: 'DELETE_SCHEDULE', payload: slotId });
   };
 

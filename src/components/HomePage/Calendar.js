@@ -13,17 +13,12 @@ import 'moment/locale/es';
 
 const Wrapper = styled.div`
   margin-bottom: 25px;
+  width: 100%;
+  .DayPicker-Month,
+  .DayPicker {
+    width: 100%;
+  }
 `;
-
-const modifiers = {
-  alldays: { daysOfWeek: [0, 1, 2, 3, 4, 5, 6] }
-};
-
-const allDayStyle = `.DayPicker-Day--alldays {
-  width: 25px !important;
-  height: 25px !important;
-  margin-top: 3px !important;
-}`;
 
 const Calendar = ({
   schedules,
@@ -55,11 +50,9 @@ const Calendar = ({
   return (
     <Wrapper>
       <div>
-        <style>{allDayStyle}</style>
         <DayPicker
           localeUtils={MomentLocaleUtils}
           locale={'es'}
-          modifiers={modifiers}
           initialMonth={moment(initialMonth, 'YYYY-MM-DD').toDate()}
           selectedDays={isSelected}
           disabledDays={isDisabled}
