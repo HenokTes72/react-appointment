@@ -37,6 +37,8 @@ const mockedWith = ({
 }) => async parameters => {
   const execApiCall = () => {
     const url = urlGenerator({ ...parameters });
+    // eslint-disable-next-line no-console
+    console.log('COMPLETE URL:', url);
     const result = isNonGet
       ? axios({ url, ...parameters })
       : axios(urlGenerator({ ...parameters, withCredentials: true }));
@@ -156,7 +158,7 @@ export const getUserByName = mockedWith({
 
 const urlUserById = ({ id, remote = true }) => {
   const url = isRemote(remote)
-    ? completeRemoteUrl(`/buscarpaciente?paciente=${id}`, true)
+    ? completeRemoteUrl(`/buscarpaciente?paciente=${id}`)
     : completeLocalUrl(`/user/${id}`);
   return url;
 };
@@ -167,17 +169,21 @@ export const getUserById = mockedWith({
   useMock: USE_MOCK
 });
 
-const urlAvailabilityById = ({ doctorId, date, start, end, remote = true }) =>
+const urlAvailabilityById = ({
+  doctorId,
+  date,
+  startTime,
+  endTime,
+  remote = true
+}) =>
   isRemote(remote)
     ? completeRemoteUrl(
-        `/validarcitas?user_id=${doctorId}&date=${date}&inicio=${start}&fin=${end}`
+        `/validarcitas?user_id=${doctorId}&date=${date}&inicio=${startTime}&fin=${endTime}`
       )
-    : completeLocalUrl(`/availability/${start}/${end}`);
+    : completeLocalUrl(`/availability/${startTime}/${endTime}`);
 
 export const getAvailabilityById = mockedWith({
   urlGenerator: urlAvailabilityById,
   mocker: mockAvailabilityById,
   useMock: true
 });
-
-export default { IS_REMOTE, USE_MOCK, USE_PROXY };

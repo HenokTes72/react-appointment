@@ -1,6 +1,8 @@
+// @flow
 import { useEffect, useReducer } from 'react';
 
 import { doAppointmentUpdate, getAvailabilityById } from '../config';
+import type { IAppointment } from '../types/appointmentDetailed';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -36,7 +38,7 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useUpdateAppointment = (initialData = {}) => {
+const useUpdateAppointment = (initialData: IAppointment = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isUpdateResponseLoading: false,
     isUpdateResponseError: false,
@@ -52,19 +54,25 @@ const useUpdateAppointment = (initialData = {}) => {
       dispatch({ type: 'FETCH_INIT' });
       try {
         const { newUpdatedData: data, setSubmitting } = state;
+        const {
+          specialist: { id: doctorId },
+          appointment: { startTime, endTime, date }
+        } = data;
         const availabilityQuery = await getAvailabilityById({
-          doctorId: data.doctorId,
-          start: data.startTime,
-          end: data.endTime,
-          date: data.date
+          doctorId,
+          startTime,
+          endTime,
+          date
         });
         const { success } = availabilityQuery.data;
         if (success) {
           if (data) {
             const bodyFormData = new FormData();
-            Object.keys(data).forEach(key => {
-              bodyFormData.set(key, data[key]);
-            });
+            // write to bodyFormData, be sure to mind the nested
+            // nature of the appointment data
+            // Object.keys(data).forEach(key => {
+            //   bodyFormData.set(key, data[key]);
+            // });
             const result = await doAppointmentUpdate({
               method: 'put',
               updateResponse: bodyFormData,
@@ -86,6 +94,7 @@ const useUpdateAppointment = (initialData = {}) => {
             }
           }
         } else {
+          // $FlowFixMe
           setSubmitting(false, 'Slot is already booked');
         }
       } catch (error) {
@@ -102,7 +111,10 @@ const useUpdateAppointment = (initialData = {}) => {
     };
   }, [state.newUpdatedData]);
 
-  const setUpdatedAppointmentData = dataAndSubmitter => {
+  const setUpdatedAppointmentData = (dataAndSubmitter: {
+    data: IAppointment,
+    submitter: (boolean, ?string) => void
+  }) => {
     dispatch({ type: 'SET_SUBMITTER_AND_DATA', payload: dataAndSubmitter });
   };
   return { ...state, setUpdatedAppointmentData };

@@ -1,6 +1,8 @@
+// @flow
 import { useEffect, useReducer } from 'react';
 
 import { doAppointmentCreate, getAvailabilityById } from '../config';
+import type { IAppointment } from '../types/appointmentDetailed';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
@@ -36,7 +38,7 @@ const dataFetchReducer = (state, action) => {
   }
 };
 
-const useCreateAppointment = (initialData = {}) => {
+const useCreateAppointment = (initialData: IAppointment = {}) => {
   const [state, dispatch] = useReducer(dataFetchReducer, {
     isCreateResponseLoading: false,
     isCreateResponseError: false,
@@ -52,18 +54,24 @@ const useCreateAppointment = (initialData = {}) => {
       dispatch({ type: 'FETCH_INIT' });
       try {
         const { newAppointmentData, setSubmitting } = state;
+        const {
+          specialist: { id: doctorId },
+          appointment: { startTime, endTime, date }
+        } = newAppointmentData;
         const availabilityQuery = await getAvailabilityById({
-          doctorId: newAppointmentData.doctorId,
-          start: newAppointmentData.startTime,
-          end: newAppointmentData.endTime,
-          date: newAppointmentData.date
+          doctorId,
+          startTime,
+          endTime,
+          date
         });
         const { success } = availabilityQuery.data;
         if (success) {
           const bodyFormData = new FormData();
-          Object.keys(newAppointmentData).forEach(name => {
-            bodyFormData.set(name, newAppointmentData[name]);
-          });
+          // write to bodyFormData, be sure to mind the nested
+          // nature of the appointment data
+          // Object.keys(newAppointmentData).forEach(name => {
+          //   bodyFormData.set(name, newAppointmentData[name])
+          // });
           const result = await doAppointmentCreate({
             method: 'post',
             postData: bodyFormData,
@@ -79,7 +87,8 @@ const useCreateAppointment = (initialData = {}) => {
             });
           }
         } else {
-          setSubmitting(false, 'Slot is already booked');
+          // $FlowFixMe
+          setSubmitting(false, ', Slot is already booked.');
         }
       } catch (error) {
         if (!didCancel) {
@@ -95,7 +104,10 @@ const useCreateAppointment = (initialData = {}) => {
     };
   }, [state.newAppointmentData]);
 
-  const setNewAppointmentData = dataAndSubmitter => {
+  const setNewAppointmentData = (dataAndSubmitter: {
+    data: IAppointment,
+    submitter: (boolean, ?string) => void
+  }) => {
     dispatch({ type: 'SET_SUBMITTER_AND_DATA', payload: dataAndSubmitter });
   };
   return { ...state, setNewAppointmentData };

@@ -20,6 +20,7 @@ import useFetchEmails from '../../hooks/fetchEmails';
 import useFetchNames from '../../hooks/fetchNames';
 import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
 import useAppointmentCreate from '../../hooks/createAppointment';
+import useAppointmentUpdate from '../../hooks/updateAppointment';
 import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 import type { IAppointment } from '../../types/appointmentDetailed';
@@ -57,12 +58,15 @@ const AppointmentCreateEdit = ({
   isCreate,
   updateAppointmentCache,
   updateScheduleCache,
+  okToBookAppointment,
   data
 }) => {
   const { emails, setQuery } = useFetchEmails();
   const { namedUsersData, setName } = useFetchNames();
   const { setEmailAndCallback } = useFetchUserByEmail();
   const { setNewAppointmentData } = useAppointmentCreate();
+  const { setUpdatedAppointmentData } = useAppointmentUpdate();
+
   const {
     setCreateModalVisibility,
     setEditModalVisibility,
@@ -95,29 +99,11 @@ const AppointmentCreateEdit = ({
     };
   };
 
-  const setSubmit = (actions, values) => (success, message) => {
+  const setSubmit = (actions, values, dataToSchedules) => (
+    success,
+    message
+  ) => {
     if (success) {
-      const {
-        specialist: { id: doctorId },
-        patient: { id: patientId, firstName, lastName },
-        appointment: {
-          startTime,
-          endTime,
-          date,
-          place: { id: clinicaId, name: clinica }
-        }
-      } = values;
-      const dataToSchedules = dataForSchedules({
-        id: values.id,
-        patient: `${firstName} ${lastName}`,
-        place: clinica,
-        date,
-        start: startTime,
-        end: endTime,
-        doctorId,
-        patientId,
-        clinicaId
-      });
       if (isCreate) {
         addToAppointmentCache(values);
         addToSchedules(dataToSchedules);
@@ -224,10 +210,43 @@ const AppointmentCreateEdit = ({
           };
           // eslint-disable-next-line no-console
           console.log('UPDATED VALUES:', JSON.stringify(updatedValues));
-          setNewAppointmentData({
-            data: updatedValues,
-            submitter: setSubmit(actions, updatedValues)
+          const {
+            specialist: { id: doctorId },
+            patient: { id: patientId, firstName, lastName },
+            appointment: {
+              startTime,
+              endTime,
+              date,
+              place: { id: clinicaId, name: clinica }
+            }
+          } = updatedValues;
+          const dataToSchedules = dataForSchedules({
+            id: values.id,
+            patient: `${firstName} ${lastName}`,
+            place: clinica,
+            date,
+            start: startTime,
+            end: endTime,
+            doctorId,
+            patientId,
+            clinicaId
           });
+          if (!okToBookAppointment(dataToSchedules)) {
+            Modal.error({
+              title: 'Unable to Book',
+              content: 'The time slot you chose is already booked!'
+            });
+          } else if (isCreate) {
+            setNewAppointmentData({
+              data: updatedValues,
+              submitter: setSubmit(actions, updatedValues, dataToSchedules)
+            });
+          } else {
+            setUpdatedAppointmentData({
+              data: updatedValues,
+              submitter: setSubmit(actions, updatedValues, dataToSchedules)
+            });
+          }
         }}
         validationSchema={AppointmentSchema}
       >
@@ -520,6 +539,7 @@ AppointmentCreateEdit.propTypes = {
   isCreate: PropTypes.bool.isRequired,
   updateScheduleCache: PropTypes.func,
   updateAppointmentCache: PropTypes.func,
+  okToBookAppointment: PropTypes.func.isRequired,
   data: PropTypes.object
 };
 

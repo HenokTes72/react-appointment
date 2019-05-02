@@ -1,7 +1,9 @@
+// @flow
 import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 import { Modal } from 'antd';
 import PropTypes from 'prop-types';
+import moment from 'moment';
 
 import LoadingIndicator from '../LoadingIndicator';
 import { CalendarWrapper, AppointmentWrapper } from './WrapperStyles';
@@ -22,6 +24,8 @@ import DeleteAppointmentContext from '../../contexts/deleteContext';
 import ModalVisibilityContext from '../../contexts/visibilityContext';
 import { ColorProvider } from '../../contexts/colorContext';
 import ConditionalRender from '../../utils/conditionalRender';
+
+import type { ICompactAppointment } from '../../types/appointmentCompact';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -49,6 +53,27 @@ const filterSchedulesByDate = (schedules, date) => {
     }
   });
   return filteredMatches;
+};
+
+const canAppointmentBeBooked = (
+  bookedAppointments: Array<ICompactAppointment>,
+  appintment: ICompactAppointment
+): boolean => {
+  const start = moment(appintment.inicio, 'hh:mm A');
+  const end = moment(appintment.fin, 'hh:mm A');
+  const collision = bookedAppointments.find(bookedAppointment => {
+    const doctorMatch = appintment.doctor_id === bookedAppointment.doctor_id;
+    if (!doctorMatch) {
+      return false;
+    }
+    const currentStart = moment(bookedAppointment.inicio, 'hh:mm A');
+    const currentEnd = moment(bookedAppointment.fin, 'hh:mm A');
+    const isStartTrapped =
+      start.isAfter(currentStart) && start.isBefore(currentEnd);
+    const isEndTrapped = end.isAfter(currentStart) && end.isBefore(currentEnd);
+    return isStartTrapped || isEndTrapped;
+  });
+  return collision === undefined;
 };
 
 const HomePage = ({ isMobileScreen }) => {
@@ -89,6 +114,10 @@ const HomePage = ({ isMobileScreen }) => {
     setCreateModalVisibility,
     setEventModalVisibility
   } = useContext(ModalVisibilityContext);
+
+  const okToBookAppointment = (appointment: ICompactAppointment): boolean => {
+    return canAppointmentBeBooked(schedules, appointment);
+  };
 
   return (
     <>
@@ -170,6 +199,7 @@ const HomePage = ({ isMobileScreen }) => {
               durations={aMinutes}
               times={aTime}
               scheduleIds={schedules.map(schedule => schedule.id)}
+              okToBookAppointment={okToBookAppointment}
             />
           ) : (
             <DeleteAppointmentContext.Provider
@@ -205,6 +235,7 @@ const HomePage = ({ isMobileScreen }) => {
               durations={aMinutes}
               times={aTime}
               scheduleIds={schedules.map(schedule => schedule.id)}
+              okToBookAppointment={okToBookAppointment}
             />
           )
         )}
