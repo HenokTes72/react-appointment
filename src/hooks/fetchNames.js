@@ -54,6 +54,8 @@ const useFetchNames = (initialData = []) => {
         const { name } = state;
         const result = await getUserByName({ name });
         const data = result.data.success ? result.data.paciente : [];
+        // eslint-disable-next-line no-console
+        console.log('DATa:', JSON.stringify(data));
         if (!didCancel) {
           dispatch({
             type: 'FETCH_SUCCESS',

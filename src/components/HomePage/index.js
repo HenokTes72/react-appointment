@@ -1,9 +1,11 @@
 // @flow
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import styled from 'styled-components';
 import { Modal } from 'antd';
 import PropTypes from 'prop-types';
 import moment from 'moment';
+
+import { connect } from 'react-redux';
 
 import LoadingIndicator from '../LoadingIndicator';
 import { CalendarWrapper, AppointmentWrapper } from './WrapperStyles';
@@ -26,6 +28,9 @@ import { ColorProvider } from '../../contexts/colorContext';
 import ConditionalRender from '../../utils/conditionalRender';
 
 import type { ICompactAppointment } from '../../types/appointmentCompact';
+
+import { doFetchAppointments } from '../../redux/actions/appointment';
+import { doFetchMonthlyAppointments } from '../../redux/actions/monthlyAppointments';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -76,7 +81,19 @@ const canAppointmentBeBooked = (
   return collision === undefined;
 };
 
-const HomePage = ({ isMobileScreen }) => {
+const HomePage = ({
+  isMobileScreen,
+  fetchAppointments,
+  fetchMonthlyAppointments,
+  monthlyAppointments
+}) => {
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('YA EFFECT GOT CALLED');
+    fetchAppointments({ query: 'check_check' });
+    fetchMonthlyAppointments({ query: 'check_check' });
+  }, []);
+
   const {
     isFetchByMonthLoading,
     isFetchByMonthError,
@@ -128,7 +145,7 @@ const HomePage = ({ isMobileScreen }) => {
               isLoading={isFetchByMonthLoading}
               isError={isFetchByMonthError}
               loader={() => <LoadingIndicator />}
-              data={schedules}
+              data={monthlyAppointments}
             >
               <Calendar
                 schedules={schedules}
@@ -245,7 +262,22 @@ const HomePage = ({ isMobileScreen }) => {
 };
 
 HomePage.propTypes = {
-  isMobileScreen: PropTypes.bool.isRequired
+  isMobileScreen: PropTypes.bool.isRequired,
+  monthlyAppointments: PropTypes.array.isRequired,
+  fetchAppointments: PropTypes.func.isRequired,
+  fetchMonthlyAppointments: PropTypes.func.isRequired
 };
 
-export default withMobile(HomePage);
+const mapDispatchToProps = dispatch => ({
+  fetchAppointments: query => dispatch(doFetchAppointments(query)),
+  fetchMonthlyAppointments: query => dispatch(doFetchMonthlyAppointments(query))
+});
+
+const mapStateToProps = state => ({
+  monthlyAppointments: state.monthlyAppointments
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withMobile(HomePage));

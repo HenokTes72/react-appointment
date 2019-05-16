@@ -38,7 +38,7 @@ const mockedWith = ({
   const execApiCall = () => {
     const url = urlGenerator({ ...parameters });
     // eslint-disable-next-line no-console
-    console.log('COMPLETE URL:', url);
+    // console.log('COMPLETE URL:', url);
     const result = isNonGet
       ? axios({ url, ...parameters })
       : axios(urlGenerator({ ...parameters, withCredentials: true }));
