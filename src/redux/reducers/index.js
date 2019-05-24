@@ -1,10 +1,8 @@
 import { combineReducers } from 'redux';
-import appointmentReducer from './appointment';
-import monthlyAppointmentsReducer from './monthlyAppointments';
+import reducerFetchAppointmentsByMonth from './reducerFetchAppointmentsByMonth';
 
 const rootReducer = combineReducers({
-  appointments: appointmentReducer,
-  monthlyAppointments: monthlyAppointmentsReducer
+  stateFetchAppointmentsByMonth: reducerFetchAppointmentsByMonth
 });
 
 export default rootReducer;

@@ -15,12 +15,13 @@ import {
   mockAvailabilityById
 } from './mock';
 
-const LOCAL_END_POINT = 'http://localhost:3000/api/v1/appointment';
+const LOCAL_END_POINT = 'http://localhost:5001/api/v1/appointment';
 const DEV_REMOTE_END_POINT = 'http://test1.saludvitale.com';
 const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
-const IS_REMOTE = true;
-const USE_MOCK = false;
+const IS_REMOTE = false;
+const USE_MOCK = true;
 const USE_PROXY = true;
+const USE_AXIOS = false;
 
 const isRemote = remote => (remote === undefined ? IS_REMOTE : remote);
 const completeRemoteUrl = (endPoint, useProxy = USE_PROXY) =>
@@ -37,12 +38,16 @@ const mockedWith = ({
 }) => async parameters => {
   const execApiCall = () => {
     const url = urlGenerator({ ...parameters });
-    // eslint-disable-next-line no-console
-    // console.log('COMPLETE URL:', url);
-    const result = isNonGet
-      ? axios({ url, ...parameters })
-      : axios(urlGenerator({ ...parameters, withCredentials: true }));
-    return result;
+    if (USE_AXIOS) {
+      return isNonGet
+        ? axios({ url, ...parameters })
+        : axios(urlGenerator({ ...parameters, withCredentials: true }));
+    }
+    return isNonGet
+      ? fetch({ url, ...parameters }).then(response => response.json())
+      : fetch(urlGenerator({ ...parameters, withCredentials: true })).then(
+          response => response.json()
+        );
   };
 
   return useMock ? mocker({ ...parameters }) : execApiCall();

@@ -1,15 +1,10 @@
 import { takeEvery, all } from 'redux-saga/effects';
-import {
-  APPOINTMENTS_FETCH,
-  MONTHLY_APPOINTMENTS_FETCH
-} from '../constants/actionTypes';
-import handleFetchAppointments from './appointment';
-import handleFetchMonthlyAppointments from './monthlyAppointments';
+import { FETCH_CURRENT_MONTH_APPOINTMENTS } from '../constants/actionTypes';
+import fetchAppointmentsByMonth from './sagaFetchAppointmentsByMonth';
 
 function* watchAll() {
   yield all([
-    takeEvery(APPOINTMENTS_FETCH, handleFetchAppointments),
-    takeEvery(MONTHLY_APPOINTMENTS_FETCH, handleFetchMonthlyAppointments)
+    takeEvery(FETCH_CURRENT_MONTH_APPOINTMENTS, fetchAppointmentsByMonth)
   ]);
 }
 

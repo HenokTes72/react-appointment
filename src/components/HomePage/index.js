@@ -18,7 +18,7 @@ import withMobile from '../../utils/withMobile';
 import AppointmentDetail from '../AppointmentDetail';
 import MyButton from '../Button';
 import AppointmentCreateEdit from '../AppointmentCreateEdit';
-import useFetchAppointmentsByMonth from '../../hooks/fetchAppointmentsByMonth';
+// import useFetchAppointmentsByMonth from '../../hooks/fetchAppointmentsByMonth';
 import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfessionals';
 import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
 
@@ -29,8 +29,15 @@ import ConditionalRender from '../../utils/conditionalRender';
 
 import type { ICompactAppointment } from '../../types/appointmentCompact';
 
-import { doFetchAppointments } from '../../redux/actions/appointment';
-import { doFetchMonthlyAppointments } from '../../redux/actions/monthlyAppointments';
+import {
+  actionSetSelectedMonth,
+  actionSetProfessionalIds,
+  actionFilterSchedules,
+  actionAddSchedule,
+  actionUpdateSchedule,
+  actionDeleteSchedule,
+  actionFetchCurrentMonthAppointments
+} from '../../redux/actions/actionsFetchAppointmentsByMonth';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -83,29 +90,36 @@ const canAppointmentBeBooked = (
 
 const HomePage = ({
   isMobileScreen,
-  fetchAppointments,
-  fetchMonthlyAppointments,
-  monthlyAppointments
+  setSelectedMonth,
+  setProfessionalIds,
+  filterSchedules,
+  deleteSchedule,
+  addToSchedules,
+  updateSchedule,
+  fetchCurrentMonthAppointments,
+  isFetchByMonthLoading,
+  isFetchByMonthError,
+  schedules,
+  selectedMonth
 }) => {
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log('YA EFFECT GOT CALLED');
-    fetchAppointments({ query: 'check_check' });
-    fetchMonthlyAppointments({ query: 'check_check' });
+    fetchCurrentMonthAppointments({});
   }, []);
 
-  const {
-    isFetchByMonthLoading,
-    isFetchByMonthError,
-    schedules,
-    selectedMonth,
-    setSelectedMonth,
-    setProfessionalIds,
-    filterSchedules,
-    deleteSchedule,
-    addToSchedules,
-    updateSchedule
-  } = useFetchAppointmentsByMonth();
+  // const {
+  //   isFetchByMonthLoading,
+  //   isFetchByMonthError,
+  //   schedules,
+  //   selectedMonth,
+  //   setSelectedMonth,
+  //   setProfessionalIds,
+  //   filterSchedules,
+  //   deleteSchedule,
+  //   addToSchedules,
+  //   updateSchedule
+  // } = useFetchAppointmentsByMonth();
 
   const {
     isBasicsLoading,
@@ -145,7 +159,7 @@ const HomePage = ({
               isLoading={isFetchByMonthLoading}
               isError={isFetchByMonthError}
               loader={() => <LoadingIndicator />}
-              data={monthlyAppointments}
+              data={schedules}
             >
               <Calendar
                 schedules={schedules}
@@ -263,18 +277,37 @@ const HomePage = ({
 
 HomePage.propTypes = {
   isMobileScreen: PropTypes.bool.isRequired,
-  monthlyAppointments: PropTypes.array.isRequired,
-  fetchAppointments: PropTypes.func.isRequired,
-  fetchMonthlyAppointments: PropTypes.func.isRequired
+  setSelectedMonth: PropTypes.func.isRequired,
+  setProfessionalIds: PropTypes.func.isRequired,
+  filterSchedules: PropTypes.func.isRequired,
+  deleteSchedule: PropTypes.func.isRequired,
+  addToSchedules: PropTypes.func.isRequired,
+  updateSchedule: PropTypes.func.isRequired,
+  fetchCurrentMonthAppointments: PropTypes.func.isRequired,
+  isFetchByMonthLoading: PropTypes.bool.isRequired,
+  isFetchByMonthError: PropTypes.bool.isRequired,
+  schedules: PropTypes.array.isRequired,
+  selectedMonth: PropTypes.string.isRequired
 };
 
 const mapDispatchToProps = dispatch => ({
-  fetchAppointments: query => dispatch(doFetchAppointments(query)),
-  fetchMonthlyAppointments: query => dispatch(doFetchMonthlyAppointments(query))
+  setSelectedMonth: selectedMonth =>
+    dispatch(actionSetSelectedMonth(selectedMonth)),
+  setProfessionalIds: professionalIds =>
+    dispatch(actionSetProfessionalIds(professionalIds)),
+  filterSchedules: doctorIds => dispatch(actionFilterSchedules(doctorIds)),
+  deleteSchedule: slotId => dispatch(actionDeleteSchedule(slotId)),
+  addToSchedules: schedule => dispatch(actionAddSchedule(schedule)),
+  updateSchedule: schedule => dispatch(actionUpdateSchedule(schedule)),
+  fetchCurrentMonthAppointments: ({ token, institutionId }) =>
+    dispatch(actionFetchCurrentMonthAppointments({ token, institutionId }))
 });
 
-const mapStateToProps = state => ({
-  monthlyAppointments: state.monthlyAppointments
+const mapStateToProps = ({ stateFetchAppointmentsByMonth: state }) => ({
+  isFetchByMonthLoading: state.isFetchByMonthLoading,
+  isFetchByMonthError: state.isFetchByMonthError,
+  schedules: state.schedules,
+  selectedMonth: state.selectedMonth
 });
 
 export default connect(
