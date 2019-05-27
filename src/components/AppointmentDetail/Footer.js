@@ -1,10 +1,21 @@
-import React, { useContext } from 'react';
+import React from 'react';
+
+import { connect } from 'react-redux';
+
+import PropTypes from 'prop-types';
+
 import styled from 'styled-components';
 import { Modal } from 'antd';
 import { StyledButton } from '../Button';
 import useCancelAppointment from '../../hooks/cancelAppointment';
-import DeleteAppointmentContext from '../../contexts/deleteContext';
-import ModalVisibilityContext from '../../contexts/visibilityContext';
+// import DeleteAppointmentContext from '../../contexts/deleteContext';
+// import ModalVisibilityContext from '../../contexts/visibilityContext';
+
+import {
+  actionShowEventModal,
+  actionShowEditModal
+} from '../../redux/actions/actionsModalVisibility';
+import { actionDeleteSchedule } from '../../redux/actions/actionsFetchAppointmentsByMonth';
 
 const Wrapper = styled.div`
   display: flex;
@@ -12,12 +23,17 @@ const Wrapper = styled.div`
   margin-bottom: 10px;
 `;
 
-const Footer = () => {
+const Footer = ({
+  setEventModalVisibility,
+  setEditModalVisibility,
+  deleteSchedule,
+  slotId
+}) => {
   const { cancel, setCancel } = useCancelAppointment();
-  const deleteAppointmentFromState = useContext(DeleteAppointmentContext);
-  const { setEventModalVisibility, setEditModalVisibility } = useContext(
-    ModalVisibilityContext
-  );
+  // const deleteAppointmentFromState = useContext(DeleteAppointmentContext);
+  // const { setEventModalVisibility, setEditModalVisibility } = useContext(
+  //   ModalVisibilityContext
+  // );
 
   const cancelAppointment = () => {
     setCancel(!cancel);
@@ -26,7 +42,8 @@ const Footer = () => {
       content:
         'You have successfully deleted the appointment, waiting for a working API'
     });
-    deleteAppointmentFromState();
+    // deleteAppointmentFromState();
+    deleteSchedule(slotId);
     setEventModalVisibility(false);
   };
 
@@ -50,4 +67,20 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+Footer.propTypes = {
+  deleteSchedule: PropTypes.func.isRequired,
+  setEditModalVisibility: PropTypes.func.isRequired,
+  setEventModalVisibility: PropTypes.func.isRequired,
+  slotId: PropTypes.number.isRequired
+};
+
+const mapDispatchToProps = dispatch => ({
+  deleteSchedule: slotId => dispatch(actionDeleteSchedule(slotId)),
+  setEditModalVisibility: show => dispatch(actionShowEditModal(show)),
+  setEventModalVisibility: show => dispatch(actionShowEventModal(show))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(Footer);

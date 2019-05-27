@@ -18,7 +18,7 @@ const AppointmentDetail = ({ data }) => {
     <Wrapper>
       <Profile />
       {data && <Detail slotData={data} />}
-      <Footer />
+      <Footer slotId={data.id} />
     </Wrapper>
   );
 };

@@ -4,20 +4,20 @@ import { doAppointmentCancel } from '../config';
 
 const dataFetchReducer = (state, action) => {
   switch (action.type) {
-    case 'FETCH_INIT':
+    case 'CANCEL_INIT':
       return {
         ...state,
         isCancelResponseLoading: true,
         isCancelResponseError: false
       };
-    case 'FETCH_SUCCESS':
+    case 'CANCEL_SUCCESS':
       return {
         ...state,
         isCancelResponseLoading: false,
         isCancelResponseError: false,
         cancelResponse: action.payload
       };
-    case 'FETCH_FAILURE':
+    case 'CANCEL_FAILURE':
       return {
         ...state,
         isCancelResponseLoading: false,
@@ -45,18 +45,18 @@ const userCancelAppointment = (initialData = {}) => {
     let didCancel = false;
 
     const cancelAppointment = async () => {
-      dispatch({ type: 'FETCH_INIT' });
+      dispatch({ type: 'CANCEL_INIT' });
       try {
         const result = await doAppointmentCancel();
         if (!didCancel) {
           dispatch({
-            type: 'FETCH_SUCCESS',
+            type: 'CANCEL_SUCCESS',
             payload: result.data
           });
         }
       } catch (error) {
         if (!didCancel) {
-          dispatch({ type: 'FETCH_FAILURE' });
+          dispatch({ type: 'CANCEL_FAILURE' });
         }
       }
     };

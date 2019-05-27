@@ -1,5 +1,5 @@
 // @flow
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Modal } from 'antd';
 import PropTypes from 'prop-types';
@@ -19,11 +19,11 @@ import AppointmentDetail from '../AppointmentDetail';
 import MyButton from '../Button';
 import AppointmentCreateEdit from '../AppointmentCreateEdit';
 // import useFetchAppointmentsByMonth from '../../hooks/fetchAppointmentsByMonth';
-import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfessionals';
-import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
+// import useFetchPlacesAndProfessionals from '../../hooks/fetchPlacesAndProfessionals';
+// import useFetchAppointmentById from '../../hooks/fetchAppointmentsById';
 
-import DeleteAppointmentContext from '../../contexts/deleteContext';
-import ModalVisibilityContext from '../../contexts/visibilityContext';
+// import DeleteAppointmentContext from '../../contexts/deleteContext';
+// import ModalVisibilityContext from '../../contexts/visibilityContext';
 import { ColorProvider } from '../../contexts/colorContext';
 import ConditionalRender from '../../utils/conditionalRender';
 
@@ -31,13 +31,52 @@ import type { ICompactAppointment } from '../../types/appointmentCompact';
 
 import {
   actionSetSelectedMonth,
-  actionSetProfessionalIds,
   actionFilterSchedules,
   actionAddSchedule,
   actionUpdateSchedule,
-  actionDeleteSchedule,
   actionFetchCurrentMonthAppointments
 } from '../../redux/actions/actionsFetchAppointmentsByMonth';
+
+import { actionFetchPlacesAndProfessionals } from '../../redux/actions/actionsFetchPlacesAndProfessionals';
+
+import {
+  actionUpdateAppointment,
+  actionAddAppointmentToCache,
+  actionSetProfessionalIdAndName,
+  actionFetchAppointmentById
+} from '../../redux/actions/actionsFetchAppointmentById';
+
+import {
+  actionShowCreateModal,
+  actionShowEventModal
+} from '../../redux/actions/actionsModalVisibility';
+
+import {
+  selectSelectedMonth,
+  selectProfessionalIds,
+  selectIsFetchByMonthLoading,
+  selectIsFetchByMonthError,
+  selectSchedules
+} from '../../redux/selectors/selectorsFetchAppointmentsByMonth';
+
+import {
+  selectIsFetchPlacesProfessionalsLoading,
+  selectIsFetchPlacesProfessionalsError,
+  selectInstitutionData
+} from '../../redux/selectors/selectorsFetchPlacesAndProfessionals';
+
+import {
+  selectIdAndName,
+  selectIsAppointmentLoading,
+  selectIsFetchAppointmentError,
+  selectAppointment
+} from '../../redux/selectors/selectorsFetchAppointmentById';
+
+import {
+  selectEditModalVisibility,
+  selectCreateModalVisibility,
+  selectEventModalVisibility
+} from '../../redux/selectors/selectorsModalVisibility';
 
 const HomeWrapper = styled.div`
   display: flex;
@@ -91,23 +130,47 @@ const canAppointmentBeBooked = (
 const HomePage = ({
   isMobileScreen,
   setSelectedMonth,
-  setProfessionalIds,
   filterSchedules,
-  deleteSchedule,
   addToSchedules,
   updateSchedule,
   fetchCurrentMonthAppointments,
   isFetchByMonthLoading,
   isFetchByMonthError,
   schedules,
-  selectedMonth
+  selectedMonth,
+  professionalIds,
+
+  fetchPlacesAndProfessionals,
+  isBasicsLoading,
+  isBasicsError,
+  institutionData,
+
+  isAppointmentLoading,
+  isAppointmentError,
+  appointmentData,
+  idAndName,
+  setIdAndName,
+  updateAppointmentData,
+  addToAppointmentCache,
+  fetchAppointmentById,
+
+  showEditModal,
+  showCreateModal,
+  showEventModal,
+  setCreateModalVisibility,
+  setEventModalVisibility
 }) => {
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('YA EFFECT GOT CALLED');
     fetchCurrentMonthAppointments({});
+  }, [selectedMonth, professionalIds]);
+
+  useEffect(() => {
+    fetchPlacesAndProfessionals({});
   }, []);
 
+  useEffect(() => {
+    fetchAppointmentById({});
+  }, [idAndName]);
   // const {
   //   isFetchByMonthLoading,
   //   isFetchByMonthError,
@@ -121,30 +184,32 @@ const HomePage = ({
   //   updateSchedule
   // } = useFetchAppointmentsByMonth();
 
-  const {
-    isBasicsLoading,
-    isBasicsError,
-    institutionData: { doctores, clinicas, aTime, aMinutes }
-  } = useFetchPlacesAndProfessionals({ setProfessionalIds });
+  // const {
+  //   isBasicsLoading,
+  //   isBasicsError,
+  //   institutionData: { doctores, clinicas, aTime, aMinutes }
+  // } = useFetchPlacesAndProfessionals({ setProfessionalIds });
 
-  const {
-    isAppointmentLoading,
-    isAppointmentError,
-    appointmentData,
-    setIdAndName,
-    updateAppointmentData,
-    addToAppointmentCache
-  } = useFetchAppointmentById();
+  const { doctores, clinicas, aTime, aMinutes } = institutionData;
+
+  // const {
+  //   isAppointmentLoading,
+  //   isAppointmentError,
+  //   appointmentData,
+  //   setIdAndName,
+  //   updateAppointmentData,
+  //   addToAppointmentCache
+  // } = useFetchAppointmentById();
 
   const [selectedDate, setSelectedDate] = useState(null);
 
-  const {
-    showEditModal,
-    showCreateModal,
-    showEventModal,
-    setCreateModalVisibility,
-    setEventModalVisibility
-  } = useContext(ModalVisibilityContext);
+  // const {
+  //   showEditModal,
+  //   showCreateModal,
+  //   showEventModal,
+  //   setCreateModalVisibility,
+  //   setEventModalVisibility
+  // } = useContext(ModalVisibilityContext);
 
   const okToBookAppointment = (appointment: ICompactAppointment): boolean => {
     return canAppointmentBeBooked(schedules, appointment);
@@ -233,13 +298,13 @@ const HomePage = ({
               okToBookAppointment={okToBookAppointment}
             />
           ) : (
-            <DeleteAppointmentContext.Provider
-              value={() => {
-                deleteSchedule(appointmentData.id);
-              }}
-            >
-              <AppointmentDetail data={appointmentData} />
-            </DeleteAppointmentContext.Provider>
+            // <DeleteAppointmentContext.Provider
+            //   value={() => {
+            //     deleteSchedule(appointmentData.id);
+            //   }}
+            // >
+            <AppointmentDetail data={appointmentData} />
+            // </DeleteAppointmentContext.Provider>
           ))
         )}
       </Modal>
@@ -277,37 +342,84 @@ const HomePage = ({
 
 HomePage.propTypes = {
   isMobileScreen: PropTypes.bool.isRequired,
+
   setSelectedMonth: PropTypes.func.isRequired,
-  setProfessionalIds: PropTypes.func.isRequired,
+  professionalIds: PropTypes.array.isRequired,
   filterSchedules: PropTypes.func.isRequired,
-  deleteSchedule: PropTypes.func.isRequired,
   addToSchedules: PropTypes.func.isRequired,
   updateSchedule: PropTypes.func.isRequired,
   fetchCurrentMonthAppointments: PropTypes.func.isRequired,
+  fetchPlacesAndProfessionals: PropTypes.func.isRequired,
+
   isFetchByMonthLoading: PropTypes.bool.isRequired,
   isFetchByMonthError: PropTypes.bool.isRequired,
   schedules: PropTypes.array.isRequired,
-  selectedMonth: PropTypes.string.isRequired
+  selectedMonth: PropTypes.string.isRequired,
+
+  isBasicsLoading: PropTypes.bool.isRequired,
+  isBasicsError: PropTypes.bool.isRequired,
+  institutionData: PropTypes.object.isRequired,
+
+  isAppointmentLoading: PropTypes.bool.isRequired,
+  isAppointmentError: PropTypes.bool.isRequired,
+  appointmentData: PropTypes.object.isRequired,
+  idAndName: PropTypes.object.isRequired,
+  setIdAndName: PropTypes.func.isRequired,
+  updateAppointmentData: PropTypes.func.isRequired,
+  addToAppointmentCache: PropTypes.func.isRequired,
+  fetchAppointmentById: PropTypes.func.isRequired,
+
+  showEditModal: PropTypes.bool.isRequired,
+  showCreateModal: PropTypes.bool.isRequired,
+  showEventModal: PropTypes.bool.isRequired,
+  setCreateModalVisibility: PropTypes.func.isRequired,
+  setEventModalVisibility: PropTypes.func.isRequired
 };
 
 const mapDispatchToProps = dispatch => ({
   setSelectedMonth: selectedMonth =>
     dispatch(actionSetSelectedMonth(selectedMonth)),
-  setProfessionalIds: professionalIds =>
-    dispatch(actionSetProfessionalIds(professionalIds)),
   filterSchedules: doctorIds => dispatch(actionFilterSchedules(doctorIds)),
-  deleteSchedule: slotId => dispatch(actionDeleteSchedule(slotId)),
   addToSchedules: schedule => dispatch(actionAddSchedule(schedule)),
   updateSchedule: schedule => dispatch(actionUpdateSchedule(schedule)),
   fetchCurrentMonthAppointments: ({ token, institutionId }) =>
-    dispatch(actionFetchCurrentMonthAppointments({ token, institutionId }))
+    dispatch(actionFetchCurrentMonthAppointments({ token, institutionId })),
+
+  fetchPlacesAndProfessionals: () =>
+    dispatch(actionFetchPlacesAndProfessionals()),
+
+  setIdAndName: idAndName =>
+    dispatch(actionSetProfessionalIdAndName(idAndName)),
+  updateAppointmentData: updatedAppointment =>
+    dispatch(actionUpdateAppointment(updatedAppointment)),
+  addToAppointmentCache: appointment =>
+    dispatch(actionAddAppointmentToCache(appointment)),
+  fetchAppointmentById: ({ secret }) =>
+    dispatch(actionFetchAppointmentById({ secret })),
+
+  setCreateModalVisibility: show => dispatch(actionShowCreateModal(show)),
+  setEventModalVisibility: show => dispatch(actionShowEventModal(show))
 });
 
-const mapStateToProps = ({ stateFetchAppointmentsByMonth: state }) => ({
-  isFetchByMonthLoading: state.isFetchByMonthLoading,
-  isFetchByMonthError: state.isFetchByMonthError,
-  schedules: state.schedules,
-  selectedMonth: state.selectedMonth
+const mapStateToProps = state => ({
+  isFetchByMonthLoading: selectIsFetchByMonthLoading(state),
+  isFetchByMonthError: selectIsFetchByMonthError(state),
+  schedules: selectSchedules(state),
+  selectedMonth: selectSelectedMonth(state),
+  professionalIds: selectProfessionalIds(state),
+
+  isBasicsLoading: selectIsFetchPlacesProfessionalsLoading(state),
+  isBasicsError: selectIsFetchPlacesProfessionalsError(state),
+  institutionData: selectInstitutionData(state),
+
+  isAppointmentLoading: selectIsAppointmentLoading(state),
+  isAppointmentError: selectIsFetchAppointmentError(state),
+  appointmentData: selectAppointment(state),
+  idAndName: selectIdAndName(state),
+
+  showEditModal: selectEditModalVisibility(state),
+  showCreateModal: selectCreateModalVisibility(state),
+  showEventModal: selectEventModalVisibility(state)
 });
 
 export default connect(

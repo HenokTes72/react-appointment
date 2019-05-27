@@ -7,4 +7,20 @@ const selectSelectedMonth = ({ stateFetchAppointmentsByMonth }) =>
 const selectProfessionalIds = ({ stateFetchAppointmentsByMonth }) =>
   stateFetchAppointmentsByMonth.professionalIds;
 
-export { selectActiveSchedules, selectSelectedMonth, selectProfessionalIds };
+const selectIsFetchByMonthLoading = ({ stateFetchAppointmentsByMonth }) =>
+  stateFetchAppointmentsByMonth.isFetchByMonthLoading;
+
+const selectIsFetchByMonthError = ({ stateFetchAppointmentsByMonth }) =>
+  stateFetchAppointmentsByMonth.isFetchByMonthError;
+
+const selectSchedules = ({ stateFetchAppointmentsByMonth }) =>
+  stateFetchAppointmentsByMonth.schedules;
+
+export {
+  selectActiveSchedules,
+  selectSelectedMonth,
+  selectProfessionalIds,
+  selectIsFetchByMonthLoading,
+  selectIsFetchByMonthError,
+  selectSchedules
+};

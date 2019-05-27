@@ -1,9 +1,11 @@
 // @flow
-import React, { useContext } from 'react';
+import React, { useEffect } from 'react';
 import { Input, Select, Form, Icon, Modal } from 'antd';
 import PropTypes from 'prop-types';
 import { Formik } from 'formik';
 import moment from 'moment';
+
+import { connect } from 'react-redux';
 
 import AppointmentSchema from './schema';
 import AutoComplete from '../AutoComplete';
@@ -16,17 +18,64 @@ import FormItem from './FormItem';
 import FormInline from './FormInline';
 import Footer from './Footer';
 
-import useFetchEmails from '../../hooks/fetchEmails';
-import useFetchNames from '../../hooks/fetchNames';
-import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
-import useAppointmentCreate from '../../hooks/createAppointment';
-import useAppointmentUpdate from '../../hooks/updateAppointment';
-import ModalVisibilityContext from '../../contexts/visibilityContext';
+// import useFetchEmails from '../../hooks/fetchEmails';
+// import useFetchNames from '../../hooks/fetchNames';
+// import useFetchUserByEmail from '../../hooks/fetchUserByEmail';
+// import useAppointmentCreate from '../../hooks/createAppointment';
+// import useAppointmentUpdate from '../../hooks/updateAppointment';
+// import ModalVisibilityContext from '../../contexts/visibilityContext';
 
 import type { IAppointment } from '../../types/appointmentDetailed';
 import type { ICompactAppointment } from '../../types/appointmentCompact';
 
 import addDuration from '../../utils/addDuration';
+
+import {
+  actionShowCreateModal,
+  actionShowEventModal,
+  actionShowEditModal
+} from '../../redux/actions/actionsModalVisibility';
+
+import {
+  actionSetEmailQuery,
+  actionFetchEmails
+} from '../../redux/actions/actionsFetchEmails';
+
+import {
+  actionSetName,
+  actionFetchNames
+} from '../../redux/actions/actionsFetchNames';
+
+import {
+  actionSetEmailAndCallback,
+  actionFetchUser
+} from '../../redux/actions/actionsFetchUser';
+
+import {
+  actionSetSubmitterAndData,
+  actionCreateAppointment
+} from '../../redux/actions/actionsCreateAppointment';
+
+import {
+  actionSetUpdaterSubmitterAndData,
+  actionUpdateAppointment
+} from '../../redux/actions/actionsUpdateAppointment';
+
+import {
+  selectEmails,
+  selectQuery
+} from '../../redux/selectors/selectorsFetchEmails';
+
+import {
+  selectName,
+  selectNamedUsersData
+} from '../../redux/selectors/selectorsFetchNames';
+
+// import { selectNewAppointmentData } from '../../redux/selectors/selectorsCreateAppointment';
+
+// import { selectUpdatedAppointmentData } from '../../redux/selectors/selectorsUpdateAppointment';
+
+import { selectEmailAndCallback } from '../../redux/selectors/selectorsFetchUser';
 
 import {
   Wrapper,
@@ -59,19 +108,58 @@ const AppointmentCreateEdit = ({
   updateAppointmentCache,
   updateScheduleCache,
   okToBookAppointment,
-  data
-}) => {
-  const { emails, setQuery } = useFetchEmails();
-  const { namedUsersData, setName } = useFetchNames();
-  const { setEmailAndCallback } = useFetchUserByEmail();
-  const { setNewAppointmentData } = useAppointmentCreate();
-  const { setUpdatedAppointmentData } = useAppointmentUpdate();
+  data,
 
-  const {
-    setCreateModalVisibility,
-    setEditModalVisibility,
-    setEventModalVisibility
-  } = useContext(ModalVisibilityContext);
+  setEditModalVisibility,
+  setCreateModalVisibility,
+  setEventModalVisibility,
+
+  emails,
+  query,
+  setQuery,
+  fetchEmails,
+
+  namedUsersData,
+  nameQuery,
+  setName,
+  fetchNames,
+
+  setEmailAndCallback,
+  fetchUserByEmail,
+  emailAndCallback,
+
+  setNewAppointmentData,
+  setUpdatedAppointmentData,
+
+  createAppointment,
+  updateAppointment
+}) => {
+  useEffect(() => {
+    fetchEmails();
+  }, [query]);
+  useEffect(() => {
+    fetchNames();
+  }, [nameQuery]);
+  useEffect(() => {
+    fetchUserByEmail();
+  }, [emailAndCallback]);
+  // useEffect(() => {
+  //   createAppointment();
+  // }, [newAppointmentData]);
+  // useEffect(() => {
+  //   updateAppointment();
+  // }, [newUpdatedData]);
+  // const { emails, setQuery } = useFetchEmails();
+  // const { namedUsersData, setName } = useFetchNames();
+  // const { setEmailAndCallback } = useFetchUserByEmail();
+  // const { setNewAppointmentData } = useAppointmentCreate();
+  // const { setUpdatedAppointmentData } = useAppointmentUpdate();
+
+  // const {
+  //   setCreateModalVisibility,
+  //   setEditModalVisibility,
+  //   setEventModalVisibility
+  // } = useContext(ModalVisibilityContext);
 
   const dataForSchedules = ({
     id,
@@ -241,11 +329,13 @@ const AppointmentCreateEdit = ({
               data: updatedValues,
               submitter: setSubmit(actions, updatedValues, dataToSchedules)
             });
+            createAppointment();
           } else {
             setUpdatedAppointmentData({
               data: updatedValues,
               submitter: setSubmit(actions, updatedValues, dataToSchedules)
             });
+            updateAppointment();
           }
         }}
         validationSchema={AppointmentSchema}
@@ -540,7 +630,74 @@ AppointmentCreateEdit.propTypes = {
   updateScheduleCache: PropTypes.func,
   updateAppointmentCache: PropTypes.func,
   okToBookAppointment: PropTypes.func.isRequired,
-  data: PropTypes.object
+  data: PropTypes.object,
+
+  setEditModalVisibility: PropTypes.func.isRequired,
+  setCreateModalVisibility: PropTypes.func.isRequired,
+  setEventModalVisibility: PropTypes.func.isRequired,
+
+  emails: PropTypes.array.isRequired,
+  query: PropTypes.string.isRequired,
+  setQuery: PropTypes.func.isRequired,
+  fetchEmails: PropTypes.func.isRequired,
+
+  namedUsersData: PropTypes.array.isRequired,
+  nameQuery: PropTypes.string.isRequired,
+  setName: PropTypes.func.isRequired,
+  fetchNames: PropTypes.func.isRequired,
+
+  setEmailAndCallback: PropTypes.func.isRequired,
+  fetchUserByEmail: PropTypes.func.isRequired,
+  emailAndCallback: PropTypes.object.isRequired,
+
+  // newAppointmentData: PropTypes.object.isRequired,
+  // newUpdatedData: PropTypes.object.isRequired,
+
+  setNewAppointmentData: PropTypes.func.isRequired,
+  setUpdatedAppointmentData: PropTypes.func.isRequired,
+
+  createAppointment: PropTypes.func.isRequired,
+  updateAppointment: PropTypes.func.isRequired
 };
 
-export default withMobile(AppointmentCreateEdit);
+const mapDispatchToProps = dispatch => ({
+  setEditModalVisibility: show => dispatch(actionShowEditModal(show)),
+  setCreateModalVisibility: show => dispatch(actionShowCreateModal(show)),
+  setEventModalVisibility: show => dispatch(actionShowEventModal(show)),
+
+  setQuery: query => dispatch(actionSetEmailQuery(query)),
+  fetchEmails: () => dispatch(actionFetchEmails()),
+
+  setName: nameQuery => dispatch(actionSetName(nameQuery)),
+  fetchNames: () => dispatch(actionFetchNames()),
+
+  setEmailAndCallback: emailAndCallback =>
+    dispatch(actionSetEmailAndCallback(emailAndCallback)),
+  fetchUserByEmail: () => dispatch(actionFetchUser()),
+
+  setNewAppointmentData: submitterAndData =>
+    dispatch(actionSetSubmitterAndData(submitterAndData)),
+  setUpdatedAppointmentData: submitterAndData =>
+    dispatch(actionSetUpdaterSubmitterAndData(submitterAndData)),
+
+  createAppointment: () => dispatch(actionCreateAppointment()),
+  updateAppointment: () => dispatch(actionUpdateAppointment())
+});
+
+const mapStateToProps = state => ({
+  emails: selectEmails(state),
+  query: selectQuery(state),
+
+  namedUsersData: selectNamedUsersData(state),
+  nameQuery: selectName(state),
+
+  emailAndCallback: selectEmailAndCallback(state)
+
+  // newAppointmentData: selectNewAppointmentData(state),
+  // newUpdatedData: selectUpdatedAppointmentData(state)
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withMobile(AppointmentCreateEdit));
